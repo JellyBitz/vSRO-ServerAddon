@@ -1,0 +1,8 @@
+# Visual Studio cache
+.vs/
+
+# Auto generated files
+Debug/*
+Release/*
+vSRO-GS/Debug/*
+vSRO-GS/Release/*
