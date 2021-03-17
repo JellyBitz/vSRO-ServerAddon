@@ -83,15 +83,15 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 	qCreateTable << " (ID INT IDENTITY(1,1) PRIMARY KEY,";
 	qCreateTable << " Action_ID INT NOT NULL,";
 	qCreateTable << " Action_Result SMALLINT NOT NULL DEFAULT 0,";
-	qCreateTable << " CharName VARCHAR(64) NOT NULL,";
-	qCreateTable << " Param_CodeName VARCHAR(128),";
-	qCreateTable << " Param_Amount01 BIGINT,";
-	qCreateTable << " Param_Amount02 BIGINT,";
-	qCreateTable << " Param_Amount03 BIGINT,";
-	qCreateTable << " Param_RegionID SMALLINT,";
-	qCreateTable << " Param_PosX REAL,";
-	qCreateTable << " Param_PosY REAL,";
-	qCreateTable << " Param_PosZ REAL)";
+	qCreateTable << " CharName16 VARCHAR(64) NOT NULL,";
+	qCreateTable << " Param01 VARCHAR(128),";
+	qCreateTable << " Param02 BIGINT,";
+	qCreateTable << " Param03 BIGINT,";
+	qCreateTable << " Param04 BIGINT,";
+	qCreateTable << " Param05 SMALLINT,";
+	qCreateTable << " Param06 REAL,";
+	qCreateTable << " Param07 REAL,";
+	qCreateTable << " Param08 REAL)";
 	qCreateTable << " END";
 
 	// Try execute query
@@ -108,7 +108,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 
 	// Start fetching actions without result
 	std::wstringstream qSelectActions;
-	qSelectActions << "SELECT ID, Action_ID, CharName, Param_CodeName, Param_Amount01, Param_Amount02, Param_Amount03, Param_RegionID, Param_PosX, Param_PosY, Param_PosZ";
+	qSelectActions << "SELECT ID, Action_ID, CharName16, Param01, Param02, Param03, Param04, Param05, Param06, Param07, Param08";
 	qSelectActions << " FROM SRO_VT_SHARD.dbo._NotifyGameServer";
 	qSelectActions << " WHERE Action_Result = " << FETCH_ACTION_STATE::UNKNOWN;
 	while (m_IsDatabaseFetchStarted)
@@ -123,19 +123,16 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 			// Set default state
 			FETCH_ACTION_STATE actionResult = FETCH_ACTION_STATE::SUCCESS;
 			// Read values
-			SQLINTEGER cID;
-			m_dbLink.sqlCmd.GetData(1, SQL_C_ULONG, &cID, 0, 0);
-			// auto cActionID = app->m_sqlCmd.GetData<SQLINTEGER>(2, SQL_C_ULONG, 0, 0);
-			SQLINTEGER cActionID;
-			m_dbLink.sqlCmd.GetData(2, SQL_C_ULONG, &cActionID, 0, 0);
+			SQLINTEGER cID, cActionID;
 			SQLVARCHAR cCharName[64];
+			m_dbLink.sqlCmd.GetData(1, SQL_C_ULONG, &cID, 0, 0);
+			m_dbLink.sqlCmd.GetData(2, SQL_C_ULONG, &cActionID, 0, 0);
 			m_dbLink.sqlCmd.GetData(3, SQL_C_CHAR, &cCharName, 64, 0);
-			//SQLVARCHAR* cCharName = app->m_sqlCmd.GetDataArray<SQLVARCHAR>(3, SQL_C_CHAR, 64, 0);
 
-			// JUST FOR TESTING
-			std::cout << "cID:" << cID << std::endl;
-			std::cout << "cActionID:" << cActionID << std::endl;
-			std::cout << "cCharName:" << cCharName << std::endl;
+			// Convert SQLVARCHAR to string
+			std::stringstream ssCharName;
+			ssCharName << cCharName;
+			std::string charName = ssCharName.str();
 
 			// Try to execute the action
 			try {
@@ -144,24 +141,21 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 				case 1: // Add Item
 				{
 					// Read params
-					SQLVARCHAR cParamCodeName[128];
-					SQLINTEGER cParamAmount01, cParamAmount02, cParamAmount03;
+					SQLVARCHAR cParam01[128];
+					SQLINTEGER cParam02, cParam03, cParam04;
+					m_dbLink.sqlCmd.GetData(4, SQL_C_CHAR, &cParam01, 128, 0);
+					m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParam02, 0, NULL);
+					m_dbLink.sqlCmd.GetData(6, SQL_C_ULONG, &cParam03, 0, NULL);
+					m_dbLink.sqlCmd.GetData(7, SQL_C_ULONG, &cParam04, 0, NULL);
 
-					m_dbLink.sqlCmd.GetData(4, SQL_C_CHAR, &cParamCodeName, 128, 0);
-					m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParamAmount01, 0, NULL);
-					m_dbLink.sqlCmd.GetData(6, SQL_C_ULONG, &cParamAmount02, 0, NULL);
-					m_dbLink.sqlCmd.GetData(7, SQL_C_ULONG, &cParamAmount03, 0, NULL);
-
-					std::stringstream charName;
-					charName << cCharName;
-					CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.str().c_str());
 					// Check player existence
+					CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.c_str());
 					if (player)
 					{
 						std::stringstream codeName;
-						codeName << cParamCodeName;
-						auto operationCode = player->AddItem(codeName.str().c_str(), cParamAmount01, cParamAmount02, cParamAmount03);
-						std::cout << " Adding item to character [" << charName.str() << "] Result [" << operationCode << "]" << std::endl;
+						codeName << cParam01;
+						auto operationCode = player->AddItem(codeName.str().c_str(), cParam02, cParam03, cParam04);
+						std::cout << " > Adding item to character [" << charName << "] Result [" << operationCode << "]" << std::endl;
 					}
 					else
 					{
@@ -171,32 +165,26 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 				case 2: // Update Gold
 				{
 					// Read params
-					SQLINTEGER cParamAmount01, cParamAmount02, cParamAmount03, cParamAmountTest;
+					SQLINTEGER cParam02;
+					m_dbLink.sqlCmd.GetData(5, SQL_C_LONG, &cParam02, 0, NULL);
 
-					m_dbLink.sqlCmd.GetData(5, SQL_C_LONG, &cParamAmount01, 0, NULL);
-
-					std::stringstream charName;
-					charName << cCharName;
-					CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.str().c_str());
 					// Check player existence
+					CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.c_str());
 					if (player)
-						player->UpdateGold(cParamAmount01);
+						player->UpdateGold(cParam02);
 					else
 						actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 				} break;
-				case 3: // Update Title by index
+				case 3: // Update Title
 				{
 					// Read params
-					SQLINTEGER cParamAmount01;
-					
-					m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParamAmount01, 0, NULL);
+					SQLINTEGER cParam02;
+					m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParam02, 0, NULL);
 
-					std::stringstream charName;
-					charName << cCharName;
-					CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.str().c_str());
 					// Check player existence
+					CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.c_str());
 					if (player)
-						player->UpdateTitle(cParamAmount01);
+						player->UpdateTitle(cParam02);
 					else
 						actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 				} break;

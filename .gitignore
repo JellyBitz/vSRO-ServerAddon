@@ -4,5 +4,5 @@
 # Auto generated files
 Debug/*
 Release/*
-vSRO-GS/Debug/*
-vSRO-GS/Release/*
+vSRO-GameServer/Debug/*
+vSRO-GameServer/Release/*

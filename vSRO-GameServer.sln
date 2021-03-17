@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31025.194
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vSRO-GS", "vSRO-GS\vSRO-GS.vcxproj", "{3152D77A-CCE4-49C7-A81D-FBC196850C54}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vSRO-GameServer", "vSRO-GameServer\vSRO-GameServer.vcxproj", "{3152D77A-CCE4-49C7-A81D-FBC196850C54}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
