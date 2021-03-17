@@ -7,8 +7,8 @@ EXTERN_DLL_EXPORT BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID 
 	switch (dwReason)
 	{
 		case DLL_PROCESS_ATTACH:
-			// Force instance creation
-			AppManager::Instance();
+			// Initialize app
+			AppManager::Initialize();
 		break;
 	}
 	return TRUE;

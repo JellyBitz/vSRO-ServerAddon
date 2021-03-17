@@ -7,17 +7,27 @@
 #include <csignal>
 #include <sstream>
 #include <exception>
+// Gameserver stuffs
+#include "Silkroad/CGObjManager.h"
 
 /// Static stuffs
+bool AppManager::m_IsInitialized;
+DatabaseLink AppManager::m_dbLink, AppManager::m_dbLinkHelper;
+bool AppManager::m_IsDatabaseFetchStarted;
 bool AppManager::m_IsDatabaseFetchThreadRunning;
-AppManager::AppManager()
+
+void AppManager::Initialize()
 {
-	InitDebugConsole();
-	InitOffsetValues();
-	if (InitSQLConnection())
+	if (!m_IsInitialized)
 	{
-		InitAddressHooks();
-		StartDatabaseFetch();
+		m_IsInitialized = true;
+		InitDebugConsole();
+		InitOffsetValues();
+		if (InitSQLConnection())
+		{
+			InitAddressHooks();
+			StartDatabaseFetch();
+		}
 	}
 }
 void AppManager::InitDebugConsole()
@@ -38,54 +48,14 @@ void AppManager::InitOffsetValues()
 bool AppManager::InitSQLConnection()
 {
 	std::cout << " * Initializing database connection..." << std::endl;
-	// Initialize database handlers
-	m_dbh.sqlEnvHandle = NULL;
-	m_dbh.sqlConnHandle = NULL;
-	m_dbh.sqlStmtHandle = NULL;
-
-	SQLWCHAR retconstring[SQL_RETURN_CODE_LEN];
-
-	// Allocate handlers
-	if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &m_dbh.sqlEnvHandle)) {
-		std::cerr << " * Error on SQLAllocHandle - SQL_HANDLE_ENV" << std::endl;
-		return false;
-	}
-	if (SQL_SUCCESS != SQLSetEnvAttr(m_dbh.sqlEnvHandle, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0)) {
-		std::cerr << " * Error on SQLSetEnvAttr" << std::endl;
-		return false;
-	}
-	if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_DBC, m_dbh.sqlEnvHandle, &m_dbh.sqlConnHandle)){
-		std::cerr << " * Error on SQLAllocHandle - SQL_HANDLE_DBC" << std::endl;
-		return false;
-	}
-
-	// Try to connect
-	SQLRETURN result = SQLDriverConnect(m_dbh.sqlConnHandle, NULL, (SQLWCHAR*)L"DRIVER={SQL Server};SERVER=localhost, 1433;DATABASE=master;UID=sa;PWD=12341;", SQL_NTS, retconstring, 1024, NULL, SQL_DRIVER_NOPROMPT);
-	
-	// Check results
-	switch (result)
+	auto connString = (SQLWCHAR*)L"DRIVER={SQL Server};SERVER=localhost, 1433;DATABASE=master;UID=sa;PWD=12341;";
+	// Try to open the database connections
+	if (m_dbLink.sqlConn.Open(connString) && m_dbLink.sqlCmd.Open(m_dbLink.sqlConn)
+		&& m_dbLinkHelper.sqlConn.Open(connString) && m_dbLinkHelper.sqlCmd.Open(m_dbLinkHelper.sqlConn))
 	{
-	case SQL_SUCCESS:
-	case SQL_SUCCESS_WITH_INFO:
-		std::cout << " * Successfully connected to SQL Server" << std::endl;
-		break;
-	case SQL_INVALID_HANDLE:
-	case SQL_ERROR:
-		std::cerr << " * Cannot connect to SQL Server!" << std::endl;
-		return false;
-	default:
-		printf(" * Error unnexpected connecting to SQL Server! (%d)\n",result);
-		return false;
+		return true;
 	}
-
-	// Allocate statement handle
-	if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_STMT, m_dbh.sqlConnHandle, &m_dbh.sqlStmtHandle)){
-		std::cerr << " * Error on SQLAllocHandle - SQL_HANDLE_STMT" << std::endl;
-		return false;
-	}
-	
-	// All done successfully
-	return true;
+	return false;
 }
 void AppManager::StartDatabaseFetch()
 {
@@ -93,18 +63,17 @@ void AppManager::StartDatabaseFetch()
 	{
 		// Start new thread fetching
 		m_IsDatabaseFetchStarted = true;
-		auto hThread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)AppManager::DatabaseFetchThread, &m_dbh, 0, 0);
+		auto hThread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)AppManager::DatabaseFetchThread, 0, 0, 0);
 		//// Set thread as background process (below normal)
 		//SetThreadPriority(hThread, -1);
 	}
 }
-DWORD WINAPI AppManager::DatabaseFetchThread(void* Data)
+DWORD WINAPI AppManager::DatabaseFetchThread()
 {
 	std::cout << " * Waiting 30 seconds to start fetching..." << std::endl;
 	Sleep(30000);
+	std::cout << " * Fetching started" << std::endl;
 	m_IsDatabaseFetchThreadRunning = true;
-	// Get handler
-	DatabaseHandler* dbh = (DatabaseHandler*)Data;
 
 	// Try to create table used to fetch
 	std::wstringstream qCreateTable;
@@ -125,69 +94,115 @@ DWORD WINAPI AppManager::DatabaseFetchThread(void* Data)
 	qCreateTable << " Param_PosZ REAL)";
 	qCreateTable << " END";
 
-	SQLRETURN result = SQLExecDirect(dbh->sqlStmtHandle, (SQLWCHAR*)qCreateTable.str().c_str(), SQL_NTS);
-	if (result != SQL_SUCCESS)
-	{
-		wprintf(L" * Error on Query: %s\r\n", qCreateTable.str().c_str());
-		ShowError(SQL_HANDLE_STMT, dbh->sqlStmtHandle, result);
-		// Stop it
+	// Try execute query
+	if (!m_dbLink.sqlCmd.ExecuteQuery((SQLWCHAR*)qCreateTable.str().c_str())) {
 		m_IsDatabaseFetchThreadRunning = false;
-		Instance().m_IsDatabaseFetchStarted = false;
 		return 0;
 	}
-	SQLFreeStmt(dbh->sqlStmtHandle, SQL_CLOSE);
+	m_dbLink.sqlCmd.Clear();
 
 	// Stops this thread loop on interruption/exit
 	signal(SIGINT, [](int) {
-		//Instance().m_IsDatabaseFetchStarted = false;
+		m_IsDatabaseFetchStarted = false;
 	});
 
 	// Start fetching actions without result
 	std::wstringstream qSelectActions;
 	qSelectActions << "SELECT ID, Action_ID, CharName, Param_CodeName, Param_Amount01, Param_Amount02, Param_Amount03, Param_RegionID, Param_PosX, Param_PosY, Param_PosZ";
 	qSelectActions << " FROM SRO_VT_SHARD.dbo._NotifyGameServer";
-	qSelectActions << " WHERE Action_Result = 0";
-	while (Instance().m_IsDatabaseFetchStarted)
+	qSelectActions << " WHERE Action_Result = " << FETCH_ACTION_STATE::UNKNOWN;
+	while (m_IsDatabaseFetchStarted)
 	{
-		// Execute query
-		result = SQLExecDirect(dbh->sqlStmtHandle, (SQLWCHAR*)qSelectActions.str().c_str(), SQL_NTS);
-		if (result != SQL_SUCCESS)
-		{
-			wprintf(L" * Error on Query: %s\r\n", qSelectActions.str().c_str());
-			ShowError(SQL_HANDLE_STMT, dbh->sqlStmtHandle, result);
+		// Try to execute query
+		if (!m_dbLink.sqlCmd.ExecuteQuery((SQLWCHAR*)qSelectActions.str().c_str()))
 			break;
-		}
-
-		// Define variables used for reading result
-		SQLINTEGER cID, cActionID, cResult;
-		SQLVARCHAR cCharName[64], cParamCodeName[128];
-		SQLBIGINT cParamAmount01, cParamAmount02, cParamAmount03;
-		SQLSMALLINT cParamRegionID;
-		SQLREAL cParamPosX, cParamPosY, cParamPosZ;
 
 		// Fetch one by one
-		while (SQLFetch(dbh->sqlStmtHandle) == SQL_SUCCESS)
+		while (m_dbLink.sqlCmd.FetchData())
 		{
+			// Set default state
+			FETCH_ACTION_STATE actionResult = FETCH_ACTION_STATE::SUCCESS;
 			// Read values
-			SQLGetData(dbh->sqlStmtHandle, 1, SQL_C_ULONG, &cID, 0, 0);
-			SQLGetData(dbh->sqlStmtHandle, 2, SQL_C_ULONG, &cActionID, 0, 0);
-			SQLGetData(dbh->sqlStmtHandle, 3, SQL_C_CHAR, &cCharName, 64, 0);
-			SQLGetData(dbh->sqlStmtHandle, 4, SQL_C_CHAR, &cParamCodeName, 128, 0);
-			SQLGetData(dbh->sqlStmtHandle, 5, SQL_C_ULONG, &cParamAmount01, 0, 0);
-			SQLGetData(dbh->sqlStmtHandle, 6, SQL_C_ULONG, &cParamAmount02, 0, 0);
-			SQLGetData(dbh->sqlStmtHandle, 7, SQL_C_ULONG, &cParamAmount03, 0, 0);
-			SQLGetData(dbh->sqlStmtHandle, 8, SQL_C_USHORT, &cParamRegionID, 0, 0);
-			SQLGetData(dbh->sqlStmtHandle, 9, SQL_C_DOUBLE, &cParamPosX, 0, 0);
-			SQLGetData(dbh->sqlStmtHandle, 10, SQL_C_DOUBLE, &cParamPosY, 0, 0);
-			SQLGetData(dbh->sqlStmtHandle, 11, SQL_C_DOUBLE, &cParamPosZ, 0, 0);
+			SQLINTEGER cID;
+			m_dbLink.sqlCmd.GetData(1, SQL_C_ULONG, &cID, 0, 0);
+			// auto cActionID = app->m_sqlCmd.GetData<SQLINTEGER>(2, SQL_C_ULONG, 0, 0);
+			SQLINTEGER cActionID;
+			m_dbLink.sqlCmd.GetData(2, SQL_C_ULONG, &cActionID, 0, 0);
+			SQLVARCHAR cCharName[64];
+			m_dbLink.sqlCmd.GetData(3, SQL_C_CHAR, &cCharName, 64, 0);
+			//SQLVARCHAR* cCharName = app->m_sqlCmd.GetDataArray<SQLVARCHAR>(3, SQL_C_CHAR, 64, 0);
+
+			// JUST FOR TESTING
+			std::cout << "cID:" << cID << std::endl;
+			std::cout << "cActionID:" << cActionID << std::endl;
+			std::cout << "cCharName:" << cCharName << std::endl;
 
 			// Try to execute the action
 			try {
 				switch (cActionID)
 				{
+				case 1: // Add Item
+				{
+					// Read params
+					SQLVARCHAR cParamCodeName[128];
+					SQLINTEGER cParamAmount01, cParamAmount02, cParamAmount03;
+
+					m_dbLink.sqlCmd.GetData(4, SQL_C_CHAR, &cParamCodeName, 128, 0);
+					m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParamAmount01, 0, NULL);
+					m_dbLink.sqlCmd.GetData(6, SQL_C_ULONG, &cParamAmount02, 0, NULL);
+					m_dbLink.sqlCmd.GetData(7, SQL_C_ULONG, &cParamAmount03, 0, NULL);
+
+					std::stringstream charName;
+					charName << cCharName;
+					CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.str().c_str());
+					// Check player existence
+					if (player)
+					{
+						std::stringstream codeName;
+						codeName << cParamCodeName;
+						auto operationCode = player->AddItem(codeName.str().c_str(), cParamAmount01, cParamAmount02, cParamAmount03);
+						std::cout << " Adding item to character [" << charName.str() << "] Result [" << operationCode << "]" << std::endl;
+					}
+					else
+					{
+						actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+				} break;
+				case 2: // Update Gold
+				{
+					// Read params
+					SQLINTEGER cParamAmount01, cParamAmount02, cParamAmount03, cParamAmountTest;
+
+					m_dbLink.sqlCmd.GetData(5, SQL_C_LONG, &cParamAmount01, 0, NULL);
+
+					std::stringstream charName;
+					charName << cCharName;
+					CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.str().c_str());
+					// Check player existence
+					if (player)
+						player->UpdateGold(cParamAmount01);
+					else
+						actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+				} break;
+				case 3: // Update Title by index
+				{
+					// Read params
+					SQLINTEGER cParamAmount01;
+					
+					m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParamAmount01, 0, NULL);
+
+					std::stringstream charName;
+					charName << cCharName;
+					CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.str().c_str());
+					// Check player existence
+					if (player)
+						player->UpdateTitle(cParamAmount01);
+					else
+						actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+				} break;
 				default:
-					std::cout << " * Error, Action_ID ("<< cActionID << ") not found!" << std::endl;
-					cResult = -1;
+					std::cout << " * Error, Action_ID (" << cActionID << ") not found!" << std::endl;
+					actionResult = FETCH_ACTION_STATE::ACTION_NOT_FOUND;
 					break;
 				}
 			}
@@ -198,58 +213,25 @@ DWORD WINAPI AppManager::DatabaseFetchThread(void* Data)
 			// Update action result from table by row id
 			std::wstringstream qUpdateResult;
 			qUpdateResult << "UPDATE SRO_VT_SHARD.dbo._NotifyGameServer";
-			qUpdateResult << " SET Action_Result = " << cResult;
+			qUpdateResult << " SET Action_Result = " << actionResult;
 			qUpdateResult << " WHERE ID = " << cID;
-			SQLHANDLE sqlStmtHandle = NULL;
-			SQLAllocHandle(SQL_HANDLE_STMT, dbh->sqlConnHandle, &sqlStmtHandle);
-			result = SQLExecDirect(sqlStmtHandle, (SQLWCHAR*)qUpdateResult.str().c_str(), SQL_NTS);
-			if (result != SQL_SUCCESS)
-			{
-				wprintf(L" * Error on Query: %s\r\n", qUpdateResult.str().c_str());
-				ShowError(SQL_HANDLE_STMT, dbh->sqlStmtHandle, result);
-			}
-			SQLFreeHandle(SQL_HANDLE_STMT, sqlStmtHandle);
+			m_dbLinkHelper.sqlCmd.ExecuteQuery((SQLWCHAR*)qUpdateResult.str().c_str());
+			m_dbLinkHelper.sqlCmd.Clear();
 		}
-		SQLFreeStmt(dbh->sqlStmtHandle, SQL_CLOSE);
-
+		m_dbLink.sqlCmd.Clear();
+		
 		// Making like 10 querys per second
 		Sleep(100);
 	}
 
 	// Close connection and dispose handlers
-	SQLFreeHandle(SQL_HANDLE_STMT, dbh->sqlStmtHandle);
-	SQLDisconnect(dbh->sqlConnHandle);
-	SQLFreeHandle(SQL_HANDLE_DBC, dbh->sqlConnHandle);
-	SQLFreeHandle(SQL_HANDLE_ENV, dbh->sqlEnvHandle);
-
-	std::cout << " - Stopped." << std::endl;
+	m_dbLinkHelper.sqlConn.Close();
+	m_dbLink.sqlConn.Close();
 
 	// Stop flags
 	m_IsDatabaseFetchThreadRunning = false;
-	Instance().m_IsDatabaseFetchStarted = false;
+	m_IsDatabaseFetchStarted = false;
+	std::cout << " * Fetching finished" << std::endl;
 
 	return 0;
-}
-
-void AppManager::ShowError(unsigned int hType, const SQLHANDLE& hHandle,SQLRETURN RetCode)
-{
-	if (RetCode == SQL_INVALID_HANDLE)
-	{
-		fwprintf(stderr, L"Invalid handle!\n");
-		return;
-	}
-
-	SQLSMALLINT iRec = 0;
-	SQLINTEGER  iError;
-	WCHAR       wszMessage[1000];
-	WCHAR       wszState[SQL_SQLSTATE_SIZE + 1];
-
-	while (SQLGetDiagRec(hType, hHandle, ++iRec, wszState, &iError, wszMessage, (SQLSMALLINT)(sizeof(wszMessage) / sizeof(WCHAR)), (SQLSMALLINT*)NULL) == SQL_SUCCESS)
-	{
-		// Hide data truncated..
-		if (wcsncmp(wszState, L"01004", 5))
-		{
-			fwprintf(stderr, L"[%5.5s] %s (%d)\n", wszState, wszMessage, iError);
-		}
-	}
 }

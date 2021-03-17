@@ -20,10 +20,25 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppManager.cpp" />
+    <ClCompile Include="Database\SQLCommand.cpp" />
+    <ClCompile Include="Database\SQLConnection.cpp" />
+    <ClCompile Include="Silkroad\Object\CGObj.cpp" />
+    <ClCompile Include="Silkroad\Object\CGObjMobile.cpp" />
+    <ClCompile Include="Silkroad\Object\CGObjChar.cpp" />
+    <ClCompile Include="Silkroad\CGObjManager.cpp" />
+    <ClCompile Include="Silkroad\Object\CGObjPC.cpp" />
     <ClCompile Include="DllMain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppManager.h" />
+    <ClInclude Include="Database\SQLCommand.h" />
+    <ClInclude Include="Database\SQLConnection.h" />
+    <ClInclude Include="Utils\Memory.h" />
+    <ClInclude Include="Silkroad\Object\CGObj.h" />
+    <ClInclude Include="Silkroad\Object\CGObjMobile.h" />
+    <ClInclude Include="Silkroad\Object\CGObjChar.h" />
+    <ClInclude Include="Silkroad\CGObjManager.h" />
+    <ClInclude Include="Silkroad\Object\CGObjPC.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
