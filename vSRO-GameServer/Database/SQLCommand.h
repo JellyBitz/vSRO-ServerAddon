@@ -20,7 +20,7 @@ public: /// Public Methods
 	// Fetch data from last query
 	bool FetchData();
 	// Read data from fetch
-	SQLRETURN GetData(SQLUSMALLINT ColumnNumber,SQLSMALLINT TargetType, SQLPOINTER TargetValue, SQLINTEGER BufferLength, SQLINTEGER* StrLen_or_IndPtr);
+	bool GetData(SQLUSMALLINT ColumnNumber,SQLSMALLINT TargetType, SQLPOINTER TargetValue, SQLINTEGER BufferLength, SQLINTEGER* StrLen_or_IndPtr);
 	// Close the current connection command
 	bool Close();
 //public: // Templates

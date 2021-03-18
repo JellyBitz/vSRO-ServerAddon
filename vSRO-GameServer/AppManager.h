@@ -5,10 +5,12 @@
 
 // All states fetching can generate
 enum FETCH_ACTION_STATE {
-	ACTION_NOT_FOUND = -1,
 	UNKNOWN = 0,
 	SUCCESS = 1,
-	CHARNAME_NOT_FOUND = 2
+	ACTION_UNDEFINED = 2,
+	UNNEXPECTED_EXCEPTION = 3,
+	PARAMS_NOT_SUPPLIED = 4,
+	CHARNAME_NOT_FOUND = 5,
 };
 
 // Handlers required to make a database link

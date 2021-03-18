@@ -20,7 +20,7 @@ bool SQLCommand::ExecuteQuery(SQLWCHAR* CommandText)
 	SQLRETURN result = SQLExecDirect(m_StmtHandle, CommandText, SQL_NTS);
 	if (result != SQL_SUCCESS)
 	{
-		std::wcout << "Error on Query: " << CommandText << std::endl;
+		std::wcout << "Error on ExecuteQuery: " << CommandText << std::endl;
 		SQLConnection::ShowError(SQL_HANDLE_STMT, m_StmtHandle, result);
 		return false;
 	}
@@ -34,14 +34,16 @@ bool SQLCommand::FetchData()
 {
 	return SQLFetch(m_StmtHandle) == SQL_SUCCESS;
 }
-SQLRETURN SQLCommand::GetData(SQLUSMALLINT ColumnNumber, SQLSMALLINT TargetType, SQLPOINTER TargetValue, SQLINTEGER BufferLength, SQLINTEGER* StrLen_or_IndPtr)
+bool SQLCommand::GetData(SQLUSMALLINT ColumnNumber, SQLSMALLINT TargetType, SQLPOINTER TargetValue, SQLINTEGER BufferLength, SQLINTEGER* StrLen_or_IndPtr)
 {
 	SQLRETURN result = SQLGetData(m_StmtHandle, ColumnNumber, TargetType, TargetValue, BufferLength, StrLen_or_IndPtr);
 	if (result != SQL_SUCCESS)
 	{
+		std::wcout << "Error on GetData (ColumnNumber:" << ColumnNumber << ")" << std::endl;
 		SQLConnection::ShowError(SQL_HANDLE_STMT, m_StmtHandle, result);
+		return false;
 	}
-	return result;
+	return true;
 }
 bool SQLCommand::Close()
 {

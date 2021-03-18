@@ -61,3 +61,49 @@ VALUES
 	6 -- "Duke"
 );
 ```
+
+4. Moves the character to the position on map
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param05, -- Region ID
+	Param06, -- PosX
+	Param07, -- PosY
+	Param08 -- PosZ
+)
+VALUES
+(
+	4,
+	'JellyBitz',
+	25000,
+	0,
+	0,
+	0
+);
+```
+
+5. Moves the character to the position on map through game world id
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param04, -- GameWorldId
+	Param05, -- Region ID
+	Param06, -- PosX
+	Param07, -- PosY
+	Param08 -- PosZ
+)
+VALUES
+(
+	5,
+	'JellyBitz',
+	1, -- Default Map
+	25000,
+	0,
+	0,
+	0
+);
+```
