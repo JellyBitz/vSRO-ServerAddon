@@ -70,8 +70,8 @@ void AppManager::StartDatabaseFetch()
 }
 DWORD WINAPI AppManager::DatabaseFetchThread()
 {
-	std::cout << " * Waiting 30 seconds to start fetching..." << std::endl;
-	Sleep(30000);
+	std::cout << " * Waiting 1min before start fetching..." << std::endl;
+	Sleep(60000);
 	std::cout << " * Fetching started" << std::endl;
 	m_IsDatabaseFetchThreadRunning = true;
 
@@ -88,10 +88,10 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 	qCreateTable << " Param02 BIGINT,";
 	qCreateTable << " Param03 BIGINT,";
 	qCreateTable << " Param04 BIGINT,";
-	qCreateTable << " Param05 SMALLINT,";
-	qCreateTable << " Param06 REAL,";
-	qCreateTable << " Param07 REAL,";
-	qCreateTable << " Param08 REAL)";
+	qCreateTable << " Param05 BIGINT,";
+	qCreateTable << " Param06 BIGINT,";
+	qCreateTable << " Param07 BIGINT,";
+	qCreateTable << " Param08 BIGINT)";
 	qCreateTable << " END";
 
 	// Try execute query
@@ -125,15 +125,10 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 			
 			// Read required params
 			SQLINTEGER cID, cActionID;
-			SQLVARCHAR cCharName[64];
+			char cCharName[64];
 			m_dbLink.sqlCmd.GetData(1, SQL_C_ULONG, &cID, 0, NULL);
 			m_dbLink.sqlCmd.GetData(2, SQL_C_ULONG, &cActionID, 0, NULL);
 			m_dbLink.sqlCmd.GetData(3, SQL_C_CHAR, &cCharName, 64, 0);
-
-			// Convert SQLVARCHAR to string
-			std::stringstream ssCharName;
-			ssCharName << cCharName;
-			std::string charName = ssCharName.str();
 
 			// Try to execute the action
 			try {
@@ -142,7 +137,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 				case 1: // Add Item
 				{
 					// Read & check params
-					SQLVARCHAR cParam01[128];
+					char cParam01[128];
 					SQLINTEGER cParam02, cParam03, cParam04;
 					if (m_dbLink.sqlCmd.GetData(4, SQL_C_CHAR, &cParam01, 128, 0)
 						&& m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParam02, 0, NULL)
@@ -150,13 +145,15 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 						&& m_dbLink.sqlCmd.GetData(7, SQL_C_ULONG, &cParam04, 0, NULL))
 					{
 						// Check player existence
-						CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.c_str());
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 						if (player)
 						{
-							std::stringstream codeName;
-							codeName << cParam01;
-							auto operationCode = player->AddItem(codeName.str().c_str(), cParam02, cParam03, cParam04);
-							std::cout << " > Adding item to character [" << charName << "] Result [" << operationCode << "]" << std::endl;
+							auto operationCode = player->AddItem(cParam01, cParam02, cParam03, cParam04);
+							if(operationCode != 1)
+							{
+								std::cout << " > Unnexpected AddItem on [" << cCharName << "] Result [" << operationCode << "]" << std::endl;
+								actionResult = FETCH_ACTION_STATE::FUNCTION_ERROR;
+							}						
 						}
 						else
 						{
@@ -171,19 +168,20 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 				case 2: // Update Gold
 				{
 					// Read params
-					SQLINTEGER cParam02;
-					if (!m_dbLink.sqlCmd.GetData(5, SQL_C_LONG, &cParam02, 0, NULL))
+					SQLBIGINT cParam02;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_LONG, &cParam02, 0, NULL))
+					{
+						// Check player existence
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->UpdateGold(cParam02);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+					else
 					{
 						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
-						break;
 					}
-
-					// Check player existence
-					CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.c_str());
-					if (player)
-						player->UpdateGold(cParam02);
-					else
-						actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 				} break;
 				case 3: // Update Title
 				{
@@ -191,29 +189,29 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 					SQLINTEGER cParam02;
 					if (m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParam02, 0, NULL))
 					{
-						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
-						break;
+						// Check player existence
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->UpdateTitle(cParam02);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
-
-					// Check player existence
-					CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.c_str());
-					if (player)
-						player->UpdateTitle(cParam02);
 					else
-						actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					{
+						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
+					}
 				} break;
 				case 4: // Move Player
 				{
 					// Read params
-					SQLUSMALLINT cParam05;
-					SQLREAL cParam06, cParam07, cParam08;
+					SQLUSMALLINT cParam05, cParam06, cParam07, cParam08;
 					if (m_dbLink.sqlCmd.GetData(8, SQL_C_USHORT, &cParam05, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(9, SQL_C_FLOAT, &cParam06, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(10, SQL_C_FLOAT, &cParam07, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(11, SQL_C_FLOAT, &cParam08, 0, NULL))
+						&& m_dbLink.sqlCmd.GetData(9, SQL_C_USHORT, &cParam06, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(10, SQL_C_USHORT, &cParam07, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(11, SQL_C_USHORT, &cParam08, 0, NULL))
 					{
 						// Check player existence
-						CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.c_str());
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 						if (player)
 							player->MoveTo(cParam05, cParam06, cParam07, cParam08);
 						else
@@ -228,16 +226,15 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 				{
 					// Read & check params
 					SQLUINTEGER cParam04;
-					SQLUSMALLINT cParam05;
-					SQLREAL cParam06, cParam07, cParam08;
+					SQLUSMALLINT cParam05, cParam06, cParam07, cParam08;
 					if ( m_dbLink.sqlCmd.GetData(7, SQL_C_ULONG, &cParam04, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(8, SQL_C_SHORT, &cParam05, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(9, SQL_C_FLOAT, &cParam06, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(10, SQL_C_FLOAT, &cParam07, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(11, SQL_C_FLOAT, &cParam08, 0, NULL))
+						&& m_dbLink.sqlCmd.GetData(8, SQL_C_USHORT, &cParam05, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(9, SQL_C_USHORT, &cParam06, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(10, SQL_C_USHORT, &cParam07, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(11, SQL_C_USHORT, &cParam08, 0, NULL))
 					{
 						// Check player existence
-						CGObjPC* player = CGObjManager::GetObjPCByCharName16(charName.c_str());
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 						if (player)
 							player->MoveTo(cParam04 + 0x10000, cParam05, cParam06, cParam07, cParam08);
 						else
@@ -247,6 +244,36 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 					{
 						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
 					}					
+				} break;
+				case 6:
+				{
+					// Read & check params
+					char cParam01[128];
+					SQLINTEGER cParam02;
+					SQLUSMALLINT cParam03;
+					if (m_dbLink.sqlCmd.GetData(4, SQL_C_CHAR, &cParam01, 128, 0)
+						&& m_dbLink.sqlCmd.GetData(5, SQL_C_USHORT, &cParam02, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(6, SQL_C_USHORT, &cParam03, 0, NULL))
+					{
+						// Check player existence
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->DropItem(cParam01, cParam02, cParam03);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+					else
+					{
+						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
+					}
+				} break;
+				case 3312: // For testing references
+				{
+					CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+					if (player)
+					{
+						std::cout << "CGObjPC ptr: " << player << std::endl;
+					}
 				} break;
 				default:
 					std::cout << " * Error on Action_ID (" << cActionID << ") : Undefined" << std::endl;

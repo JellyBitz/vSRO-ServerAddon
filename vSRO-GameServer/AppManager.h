@@ -11,6 +11,7 @@ enum FETCH_ACTION_STATE {
 	UNNEXPECTED_EXCEPTION = 3,
 	PARAMS_NOT_SUPPLIED = 4,
 	CHARNAME_NOT_FOUND = 5,
+	FUNCTION_ERROR = 6
 };
 
 // Handlers required to make a database link

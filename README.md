@@ -16,7 +16,7 @@ INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
 	CharName16,
 	Param01, -- CodeName
 	Param02, -- Amount
-	Param03, -- Variance (white stats)
+	Param03, -- Randomize stats
 	Param04 -- Plus
 )
 VALUES
@@ -26,7 +26,7 @@ VALUES
 	'ITEM_EU_SWORD_01_A',
 	1,
 	0,
-	5
+	3
 );
 ```
 
@@ -68,7 +68,7 @@ INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
 (
 	Action_ID,
 	CharName16,
-	Param05, -- Region ID
+	Param05, -- Region Id
 	Param06, -- PosX
 	Param07, -- PosY
 	Param08 -- PosZ
@@ -91,7 +91,7 @@ INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
 	Action_ID,
 	CharName16,
 	Param04, -- GameWorldId
-	Param05, -- Region ID
+	Param05, -- Region Id
 	Param06, -- PosX
 	Param07, -- PosY
 	Param08 -- PosZ
@@ -105,5 +105,25 @@ VALUES
 	0,
 	0,
 	0
+);
+```
+
+6. Drops an item near character
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param01, -- CodeName
+	Param02, -- Amount
+	Param03 -- Plus
+)
+VALUES
+(
+	6,
+	'JellyBitz',
+	'ITEM_EU_SWORD_01_A',
+	1,
+	3
 );
 ```
