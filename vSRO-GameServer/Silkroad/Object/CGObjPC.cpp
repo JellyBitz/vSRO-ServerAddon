@@ -1,11 +1,6 @@
 #include "CGObjPC.h"
 #include "../../Utils/Memory.h"
 
-/* Public Properties */
-void CGObjPC::GetGameWorldId(uint32_t* OutGameWorldId)
-{
-	call_virtual<void(__thiscall*)(CGObjPC*, uint32_t*)>(this, 5)(this, OutGameWorldId);
-}
 /* Public Methods */
 uint16_t CGObjPC::AddItem(const char* Codename, int32_t Amount, bool RandomizeStats, int8_t OptLevel)
 {
@@ -17,7 +12,7 @@ void CGObjPC::UpdateGold(int64_t Offset)
 {
 	UpdateGold(Offset, 25, true, true);
 }
-void CGObjPC::UpdateTitle(uint8_t Level)
+void CGObjPC::UpdateHwan(uint8_t Level)
 {
 	reinterpret_cast<void(__thiscall*)(CGObjPC*, uint8_t)>(0x004A9F40)(this, Level);
 }
@@ -42,6 +37,10 @@ bool CGObjPC::MoveTo(uint32_t GameWorldId, uint16_t RegionId, uint32_t PosX, uin
 	pos.PosY = PosY;
 	pos.PosZ = PosZ;
 	return MoveTo(GameWorldId, pos, 2);
+}
+bool CGObjPC::MutateItemAt(uint8_t Slot,const char* NewCodename)
+{
+	return call_virtual<bool(__thiscall*)(CGObjPC*, int32_t, const char*)>(this, 141)(this, Slot, NewCodename);
 }
 /* Private Helpers */
 void CGObjPC::UpdateGold(int64_t Offset, int32_t Unknown, bool Realtime, bool ShowMessage)

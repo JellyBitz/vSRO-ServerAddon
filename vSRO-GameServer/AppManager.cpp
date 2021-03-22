@@ -183,7 +183,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
 					}
 				} break;
-				case 3: // Update Title
+				case 3: // Update Hwan level (Berserk title)
 				{
 					// Read params
 					SQLINTEGER cParam02;
@@ -192,7 +192,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 						// Check player existence
 						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 						if (player)
-							player->UpdateTitle(cParam02);
+							player->UpdateHwan(cParam02);
 						else
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
@@ -245,7 +245,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
 					}					
 				} break;
-				case 6:
+				case 6: // Drop item near player
 				{
 					// Read & check params
 					char cParam01[128];
@@ -259,6 +259,29 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 						if (player)
 							player->DropItem(cParam01, cParam02, cParam03);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+					else
+					{
+						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
+					}
+				} break;
+				case 7: // Transform item from inventory slot
+				{ 
+					// Read & check params
+					char cParam01[128];
+					SQLUSMALLINT cParam02;
+					if (m_dbLink.sqlCmd.GetData(4, SQL_C_CHAR, &cParam01, 128, 0)
+						&& m_dbLink.sqlCmd.GetData(5, SQL_C_USHORT, &cParam02, 0, NULL))
+					{
+						// Check player existence
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+						{
+							if (!player->MutateItemAt(cParam02, cParam01))
+								actionResult = FETCH_ACTION_STATE::FUNCTION_ERROR;
+						}
 						else
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}

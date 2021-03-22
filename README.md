@@ -127,3 +127,33 @@ VALUES
 	3
 );
 ```
+
+7. Transform an item to another one from inventory slot specified
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param01, -- New item CodeName
+	Param02 -- Inventory slot
+)
+VALUES
+(
+	7,
+	'JellyBitz',
+	'ITEM_EU_SWORD_02_A',
+	13 -- First inventory slot
+);
+```
+
+#### Action Result Code
+
+```C++
+UNKNOWN = 0
+SUCCESS = 1
+ACTION_UNDEFINED = 2
+UNNEXPECTED_EXCEPTION = 3
+PARAMS_NOT_SUPPLIED = 4
+CHARNAME_NOT_FOUND = 5
+FUNCTION_ERROR = 6
+```

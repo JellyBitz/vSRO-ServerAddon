@@ -1,6 +1,6 @@
 #pragma once
 #include "CGObjMobile.h"
-#include <cstdint>
+
 // Game object for a interactive character 
 class CGObjChar : public CGObjMobile
 {
