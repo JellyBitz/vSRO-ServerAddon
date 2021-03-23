@@ -213,7 +213,10 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 						// Check player existence
 						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 						if (player)
-							player->MoveTo(cParam05, cParam06, cParam07, cParam08);
+						{
+							if(!player->MoveTo(cParam05, cParam06, cParam07, cParam08))
+								actionResult = FETCH_ACTION_STATE::FUNCTION_ERROR;
+						}
 						else
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
@@ -236,7 +239,10 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 						// Check player existence
 						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 						if (player)
-							player->MoveTo(cParam04 + 0x10000, cParam05, cParam06, cParam07, cParam08);
+						{
+							if(!player->MoveTo(cParam04 + 0x10000, cParam05, cParam06, cParam07, cParam08))
+								actionResult = FETCH_ACTION_STATE::FUNCTION_ERROR;
+						}
 						else
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
@@ -290,6 +296,18 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
 					}
 				} break;
+				case 8: // Force reloading player
+				{ 
+					// Check player existence
+					CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+					if (player)
+					{
+						if(!player->Reload())
+							actionResult = FETCH_ACTION_STATE::FUNCTION_ERROR;
+					}
+					else
+						actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+				} break;
 				case 3312: // For testing references
 				{
 					CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
@@ -297,6 +315,8 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 					{
 						std::cout << "CGObjPC ptr: " << player << std::endl;
 					}
+					else
+						actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 				} break;
 				default:
 					std::cout << " * Error on Action_ID (" << cActionID << ") : Undefined" << std::endl;

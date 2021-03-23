@@ -32,6 +32,8 @@ public: /// Public Methods
 	bool MoveTo(uint32_t GameWorldId, uint16_t RegionId, uint32_t PosX, uint32_t PosY, uint32_t PosZ);
 	// Transform an item to another one from inventory slot
 	bool MutateItemAt(uint8_t Slot,const char* NewCodename);
+	// Moves the player to the same position to force a reloading
+	bool Reload();
 private: /// Private Helpers
 	// Update the gold amount
 	void UpdateGold(int64_t Amount, int32_t Unknown, bool Realtime, bool ShowMessage);

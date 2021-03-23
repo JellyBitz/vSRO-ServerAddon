@@ -42,6 +42,12 @@ bool CGObjPC::MutateItemAt(uint8_t Slot,const char* NewCodename)
 {
 	return call_virtual<bool(__thiscall*)(CGObjPC*, int32_t, const char*)>(this, 141)(this, Slot, NewCodename);
 }
+bool CGObjPC::Reload()
+{
+	uint32_t gwid = 0;
+	GetGameWorldId(&gwid);
+	return MoveTo(gwid, m_Position, 2);
+}
 /* Private Helpers */
 void CGObjPC::UpdateGold(int64_t Offset, int32_t Unknown, bool Realtime, bool ShowMessage)
 {

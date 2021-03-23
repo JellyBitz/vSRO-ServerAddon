@@ -146,6 +146,20 @@ VALUES
 );
 ```
 
+8. Force reloading the character information by teleporting it on the same place
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+(
+	Action_ID,
+	CharName16
+)
+VALUES
+(
+	8,
+	'JellyBitz'
+);
+```
+
 #### Action Result Code
 
 ```C++
