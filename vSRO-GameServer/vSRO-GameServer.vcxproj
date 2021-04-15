@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppManager.cpp" />
+    <ClCompile Include="Silkroad\Navigation\CPosition.cpp" />
     <ClCompile Include="Database\SQLCommand.cpp" />
     <ClCompile Include="Database\SQLConnection.cpp" />
     <ClCompile Include="Silkroad\Object\CGObj.cpp" />
@@ -31,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppManager.h" />
+    <ClInclude Include="Silkroad\Navigation\CPosition.h" />
     <ClInclude Include="Database\SQLCommand.h" />
     <ClInclude Include="Database\SQLConnection.h" />
     <ClInclude Include="Utils\Memory.h" />

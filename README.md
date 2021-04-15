@@ -46,7 +46,7 @@ VALUES
 );
 ```
 
-3. Updates the title from character by level (primary key)
+3. Updates the Hwan level (Berserk rank) from character by level
 ```sql
 INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
 (
@@ -159,6 +159,25 @@ VALUES
 	'JellyBitz'
 );
 ```
+
+9. Adds a buff to the character. The duration will not be lost through teleports.
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param02, -- Skill Id (buffs only)
+	Param03 -- Duration (seconds)
+)
+VALUES
+(
+	9,
+	'JellyBitz',
+	8594, -- Ultimate screen (Lv.90)
+	30 -- 30 seconds
+);
+```
+
 
 #### Action Result Code
 

@@ -1,16 +1,6 @@
 #pragma once
 #include "CGObjChar.h"
-
-// Game map position
-class CPosition
-{
-public:
-	uint16_t RegionID;
-	uint16_t UnkUShort01;
-	uint32_t PosX;
-	uint32_t PosY;
-	uint32_t PosZ;
-};
+#include "../Navigation/CPosition.h"
 
 // Game object for a player character
 class CGObjPC : public CGObjChar
@@ -27,9 +17,9 @@ public: /// Public Methods
 	// Update hwan title by level
 	void UpdateHwan(uint8_t Level);
 	// Moves the player to the map location. Return success
-	bool MoveTo(uint16_t RegionId, uint32_t PosX, uint32_t PosY, uint32_t PosZ);
+	bool MoveTo(uint16_t RegionId, float PosX, float PosY, float PosZ);
 	// Moves the player to the gameworld and map location. Return success
-	bool MoveTo(uint32_t GameWorldId, uint16_t RegionId, uint32_t PosX, uint32_t PosY, uint32_t PosZ);
+	bool MoveTo(uint32_t GameWorldId, uint16_t RegionId, float PosX, float PosY, float PosZ);
 	// Transform an item to another one from inventory slot
 	bool MutateItemAt(uint8_t Slot,const char* NewCodename);
 	// Moves the player to the same position to force a reloading

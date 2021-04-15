@@ -16,26 +16,16 @@ void CGObjPC::UpdateHwan(uint8_t Level)
 {
 	reinterpret_cast<void(__thiscall*)(CGObjPC*, uint8_t)>(0x004A9F40)(this, Level);
 }
-bool CGObjPC::MoveTo(uint16_t RegionId, uint32_t PosX, uint32_t PosY, uint32_t PosZ)
+bool CGObjPC::MoveTo(uint16_t RegionId, float PosX, float PosY, float PosZ)
 {
 	uint32_t gwid = 0;
 	GetGameWorldId(&gwid);
-	CPosition pos;
-	pos.RegionID = RegionId;
-	pos.UnkUShort01 = m_Position.UnkUShort01;
-	pos.PosX = PosX;
-	pos.PosY = PosY;
-	pos.PosZ = PosZ;
+	CPosition pos(RegionId, m_Position.UnkUShort01,PosX,PosY,PosZ);
 	return MoveTo(gwid, pos, 2);
 }
-bool CGObjPC::MoveTo(uint32_t GameWorldId, uint16_t RegionId, uint32_t PosX, uint32_t PosY, uint32_t PosZ)
+bool CGObjPC::MoveTo(uint32_t GameWorldId, uint16_t RegionId, float PosX, float PosY, float PosZ)
 {
-	CPosition pos;
-	pos.RegionID = RegionId;
-	pos.UnkUShort01 = m_Position.UnkUShort01;
-	pos.PosX = PosX;
-	pos.PosY = PosY;
-	pos.PosZ = PosZ;
+	CPosition pos(RegionId, m_Position.UnkUShort01, PosX, PosY, PosZ);
 	return MoveTo(GameWorldId, pos, 2);
 }
 bool CGObjPC::MutateItemAt(uint8_t Slot,const char* NewCodename)

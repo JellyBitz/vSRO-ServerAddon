@@ -308,6 +308,23 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 					else
 						actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 				} break;
+				case 9: // Add buff to player
+				{
+					// Read & check params
+					SQLBIGINT cParam02, cParam03;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParam02, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(6, SQL_C_ULONG, &cParam03, 0, NULL))
+					{
+						// Check player existence
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->AddBuff(cParam02, cParam03);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+					else
+						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
+				}
 				case 3312: // For testing references
 				{
 					CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
