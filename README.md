@@ -160,7 +160,7 @@ VALUES
 );
 ```
 
-9. Adds a buff to the character. The duration will not be lost through teleports.
+9. Adds a buff to the character. The duration will not be lost through teleports
 ```sql
 INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
 (
@@ -178,6 +178,55 @@ VALUES
 );
 ```
 
+10. Creates a mob in the map position
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param02, -- RefObjId
+	Param03, -- Region Id
+	Param04, -- PosX
+	Param05, -- PosY
+	Param06 -- PosZ
+)
+VALUES
+(
+	10,
+	'',
+	1947, -- tiger
+	24744, -- Jangan (S)
+	968,
+	-27,
+	1114
+);
+```
+
+11. Creates a mob in the map position through game world id
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param02, -- RefObjId
+	Param03, -- GameWorldId
+	Param04, -- Region Id
+	Param05, -- PosX
+	Param06, -- PosY
+	Param07 -- PosZ
+)
+VALUES
+(
+	10,
+	'',
+	1947, -- tiger
+	1, -- Default Map
+	24744, -- Jangan (S)
+	968,
+	-27,
+	1114
+);
+```
 
 #### Action Result Code
 

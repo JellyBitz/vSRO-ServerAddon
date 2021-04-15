@@ -138,7 +138,9 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 				{
 					// Read & check params
 					char cParam01[128];
-					SQLINTEGER cParam02, cParam03, cParam04;
+					SQLUINTEGER cParam02;
+					SQLINTEGER cParam03;
+					SQLUSMALLINT cParam04;
 					if (m_dbLink.sqlCmd.GetData(4, SQL_C_CHAR, &cParam01, 128, 0)
 						&& m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParam02, 0, NULL)
 						&& m_dbLink.sqlCmd.GetData(6, SQL_C_ULONG, &cParam03, 0, NULL)
@@ -156,14 +158,10 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 							}						
 						}
 						else
-						{
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
-						}
 					}
 					else
-					{
 						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
-					}
 				} break;
 				case 2: // Update Gold
 				{
@@ -179,15 +177,13 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
 					else
-					{
 						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
-					}
 				} break;
 				case 3: // Update Hwan level (Berserk title)
 				{
 					// Read params
-					SQLINTEGER cParam02;
-					if (m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParam02, 0, NULL))
+					SQLUSMALLINT cParam02;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_USHORT, &cParam02, 0, NULL))
 					{
 						// Check player existence
 						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
@@ -197,17 +193,16 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
 					else
-					{
 						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
-					}
 				} break;
 				case 4: // Move Player
 				{
 					// Read params
-					SQLUSMALLINT cParam05, cParam06, cParam07, cParam08;
+					SQLUSMALLINT cParam05, cParam06, cParam08;
+					SQLSMALLINT cParam07;
 					if (m_dbLink.sqlCmd.GetData(8, SQL_C_USHORT, &cParam05, 0, NULL)
 						&& m_dbLink.sqlCmd.GetData(9, SQL_C_USHORT, &cParam06, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(10, SQL_C_USHORT, &cParam07, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(10, SQL_C_SHORT, &cParam07, 0, NULL)
 						&& m_dbLink.sqlCmd.GetData(11, SQL_C_USHORT, &cParam08, 0, NULL))
 					{
 						// Check player existence
@@ -221,19 +216,17 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
 					else
-					{
 						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
-					}
 				} break;
 				case 5: // Move Player through WorldId
 				{
 					// Read & check params
-					SQLUINTEGER cParam04;
-					SQLUSMALLINT cParam05, cParam06, cParam07, cParam08;
-					if ( m_dbLink.sqlCmd.GetData(7, SQL_C_ULONG, &cParam04, 0, NULL)
+					SQLUSMALLINT cParam04, cParam05, cParam06, cParam08;
+					SQLSMALLINT cParam07;
+					if ( m_dbLink.sqlCmd.GetData(7, SQL_C_USHORT, &cParam04, 0, NULL)
 						&& m_dbLink.sqlCmd.GetData(8, SQL_C_USHORT, &cParam05, 0, NULL)
 						&& m_dbLink.sqlCmd.GetData(9, SQL_C_USHORT, &cParam06, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(10, SQL_C_USHORT, &cParam07, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(10, SQL_C_SHORT, &cParam07, 0, NULL)
 						&& m_dbLink.sqlCmd.GetData(11, SQL_C_USHORT, &cParam08, 0, NULL))
 					{
 						// Check player existence
@@ -247,18 +240,16 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
 					else
-					{
-						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
-					}					
+						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;				
 				} break;
 				case 6: // Drop item near player
 				{
 					// Read & check params
 					char cParam01[128];
-					SQLINTEGER cParam02;
+					SQLUINTEGER cParam02;
 					SQLUSMALLINT cParam03;
 					if (m_dbLink.sqlCmd.GetData(4, SQL_C_CHAR, &cParam01, 128, 0)
-						&& m_dbLink.sqlCmd.GetData(5, SQL_C_USHORT, &cParam02, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParam02, 0, NULL)
 						&& m_dbLink.sqlCmd.GetData(6, SQL_C_USHORT, &cParam03, 0, NULL))
 					{
 						// Check player existence
@@ -269,9 +260,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
 					else
-					{
 						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
-					}
 				} break;
 				case 7: // Transform item from inventory slot
 				{ 
@@ -292,9 +281,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
 					else
-					{
 						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
-					}
 				} break;
 				case 8: // Force reloading player
 				{ 
@@ -311,7 +298,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 				case 9: // Add buff to player
 				{
 					// Read & check params
-					SQLBIGINT cParam02, cParam03;
+					SQLUINTEGER cParam02, cParam03;
 					if (m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParam02, 0, NULL)
 						&& m_dbLink.sqlCmd.GetData(6, SQL_C_ULONG, &cParam03, 0, NULL))
 					{
@@ -324,7 +311,46 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 					}
 					else
 						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
-				}
+				} break;
+				case 10: // Create mob in map location
+				{
+					// Read & check params
+					SQLUINTEGER cParam02;
+					SQLUSMALLINT cParam03, cParam04, cParam06;
+					SQLSMALLINT cParam05;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParam02, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(6, SQL_C_USHORT, &cParam03, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(7, SQL_C_USHORT, &cParam04, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(8, SQL_C_SHORT, &cParam05, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(9, SQL_C_USHORT, &cParam06, 0, NULL))
+					{
+						// Try to create mob
+						if (!CGObjManager::CreateMob(cParam02, 0x10001, cParam03, cParam04, cParam05, cParam06, 10))
+							actionResult = FETCH_ACTION_STATE::FUNCTION_ERROR;
+					}
+					else
+						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
+				} break;
+				case 11: // Create mob in map location through world id
+				{
+					// Read & check params
+					SQLUINTEGER cParam02;
+					SQLUSMALLINT cParam03, cParam04, cParam05, cParam07;
+					SQLSMALLINT cParam06;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParam02, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(6, SQL_C_USHORT, &cParam03, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(7, SQL_C_USHORT, &cParam04, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(8, SQL_C_USHORT, &cParam05, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(9, SQL_C_SHORT, &cParam06, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(10, SQL_C_USHORT, &cParam07, 0, NULL))
+					{
+						// Try to create mob
+						if (!CGObjManager::CreateMob(cParam02, cParam03 + 0x10000, cParam04, cParam05, cParam06, cParam07, 10))
+							actionResult = FETCH_ACTION_STATE::FUNCTION_ERROR;
+					}
+					else
+						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
+				} break;
 				case 3312: // For testing references
 				{
 					CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
