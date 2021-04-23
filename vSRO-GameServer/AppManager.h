@@ -39,9 +39,9 @@ private: // Private Helpers
 	// Starts console if required
 	static void InitDebugConsole();
 	// Initialize all hooks required
-	static void InitAddressHooks();
+	static void InitHooks();
 	// Set all offsets values
-	static void InitOffsetValues();
+	static void InitPatchValues();
 	// Initialize the database communication
 	static bool InitSQLConnection();
 	// Starts to fetch database info

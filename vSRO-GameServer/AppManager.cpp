@@ -9,6 +9,7 @@
 #include <exception>
 // Gameserver stuffs
 #include "Silkroad/CGObjManager.h"
+#include "Utils/Memory.h"
 
 /// Static stuffs
 bool AppManager::m_IsInitialized;
@@ -22,10 +23,10 @@ void AppManager::Initialize()
 	{
 		m_IsInitialized = true;
 		InitDebugConsole();
-		InitOffsetValues();
+		InitPatchValues();
 		if (InitSQLConnection())
 		{
-			InitAddressHooks();
+			InitHooks();
 			StartDatabaseFetch();
 		}
 	}
@@ -37,13 +38,22 @@ void AppManager::InitDebugConsole()
 	freopen("CONOUT$", "w", stderr);
 	freopen("CONIN$", "r", stdin);
 }
-void AppManager::InitAddressHooks()
+void AppManager::InitHooks()
 {
 
 }
-void AppManager::InitOffsetValues()
+void AppManager::InitPatchValues()
 {
-
+	// Set maximum level limit for Character & Pet
+	BYTE LevelMax[] = { 0 };
+	ReadProcessBytes(GetCurrentProcess(), 0x004E52C7 + 2, LevelMax, 1);
+	printf(" - Level Max. (%d) -> (%d)\r\n", LevelMax[0], 110);
+	/*LevelMax[0] = 110;
+	WriteProcessBytes(GetCurrentProcess(), 0x004E52C7 + 2, LevelMax, 1);
+	WriteProcessBytes(GetCurrentProcess(), 0x004D641B + 3, LevelMax, 1);*/
+	WriteMemoryValue<uint8_t>(0x004E52C7 + 2, 110);
+	WriteMemoryValue<uint8_t>(0x004D641B + 3, 110);
+	WriteMemoryValue<uint16_t>(0x004E5471 + 4, 110 * 4);
 }
 bool AppManager::InitSQLConnection()
 {
