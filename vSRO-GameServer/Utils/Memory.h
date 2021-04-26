@@ -82,5 +82,16 @@ template<typename T>
 static BOOL WriteMemoryValue(DWORD DestAddress, T Value)
 {
 	auto bytes = ToByteArray<T>(Value);
-	return WriteProcessBytes(GetCurrentProcess(), DestAddress, bytes, sizeof(Value));
+	return WriteProcessBytes(GetCurrentProcess(), DestAddress, bytes, sizeof(T));
+}
+
+// Reads an object on memory from the address specified
+template<typename T>
+static BOOL ReadMemoryValue(DWORD DestAddress, T& Value)
+{
+	static BYTE bytes[sizeof T];
+	BOOL result = ReadProcessBytes(GetCurrentProcess(), DestAddress, bytes, sizeof(T));
+	if (result)
+		Value = reinterpret_cast<T&>(bytes);
+	return result;
 }

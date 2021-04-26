@@ -44,16 +44,44 @@ void AppManager::InitHooks()
 }
 void AppManager::InitPatchValues()
 {
-	// Set maximum level limit for Character & Pet
-	BYTE LevelMax[] = { 0 };
-	ReadProcessBytes(GetCurrentProcess(), 0x004E52C7 + 2, LevelMax, 1);
-	printf(" - Level Max. (%d) -> (%d)\r\n", LevelMax[0], 110);
-	/*LevelMax[0] = 110;
-	WriteProcessBytes(GetCurrentProcess(), 0x004E52C7 + 2, LevelMax, 1);
-	WriteProcessBytes(GetCurrentProcess(), 0x004D641B + 3, LevelMax, 1);*/
-	WriteMemoryValue<uint8_t>(0x004E52C7 + 2, 110);
-	WriteMemoryValue<uint8_t>(0x004D641B + 3, 110);
-	WriteMemoryValue<uint16_t>(0x004E5471 + 4, 110 * 4);
+	std::cout << " * Initializing patches..." << std::endl;
+	// buffers
+	uint8_t byteValue;
+	uint32_t uintValue;
+
+	// Maximum level limit
+	if (ReadMemoryValue<uint8_t>(0x004E52C7 + 2, byteValue))
+	{
+		uint8_t newValue = 110;
+		printf(" - Level Max. (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x004E52C7 + 2, newValue); // Character
+		WriteMemoryValue<uint8_t>(0x004D641B + 3, newValue); // Pet
+		WriteMemoryValue<uint16_t>(0x004E5471 + 4, newValue * 4); // Exp bug fix
+	}
+
+	// Job level limit
+	if (ReadMemoryValue<uint8_t>(0x0060DE69 + 3, byteValue))
+	{
+		uint8_t newValue = 7;
+		printf(" - Job Level Max. (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x0060DE69 + 3, newValue);
+	}
+	
+	// CH Mastery
+	if (ReadMemoryValue<uint32_t>(0x0059C5E6 + 1, uintValue))
+	{
+		uint32_t newValue = 110 * 3;
+		printf(" - CH Masteries (%d) -> (%d)\r\n", uintValue, newValue);
+		WriteMemoryValue<uint32_t>(0x0059C5E6 + 1, newValue);
+	}
+
+	// Union chat participants per guild limit
+	if (ReadMemoryValue<uint8_t>(0x005C4B42 + 4, byteValue))
+	{
+		uint8_t newValue = 25;
+		printf(" - Union chat participants per guild limit (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x005C4B42 + 4, newValue);
+	}
 }
 bool AppManager::InitSQLConnection()
 {
