@@ -9,6 +9,7 @@
 #include <exception>
 // Gameserver stuffs
 #include "Silkroad/CGObjManager.h"
+#include "Utils/Memory.h"
 
 /// Static stuffs
 bool AppManager::m_IsInitialized;
@@ -22,10 +23,10 @@ void AppManager::Initialize()
 	{
 		m_IsInitialized = true;
 		InitDebugConsole();
-		InitOffsetValues();
+		InitPatchValues();
 		if (InitSQLConnection())
 		{
-			InitAddressHooks();
+			InitHooks();
 			StartDatabaseFetch();
 		}
 	}
@@ -37,13 +38,50 @@ void AppManager::InitDebugConsole()
 	freopen("CONOUT$", "w", stderr);
 	freopen("CONIN$", "r", stdin);
 }
-void AppManager::InitAddressHooks()
+void AppManager::InitHooks()
 {
 
 }
-void AppManager::InitOffsetValues()
+void AppManager::InitPatchValues()
 {
+	std::cout << " * Initializing patches..." << std::endl;
+	// buffers
+	uint8_t byteValue;
+	uint32_t uintValue;
 
+	// Maximum level limit
+	if (ReadMemoryValue<uint8_t>(0x004E52C7 + 2, byteValue))
+	{
+		uint8_t newValue = 110;
+		printf(" - Level Max. (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x004E52C7 + 2, newValue); // Character
+		WriteMemoryValue<uint8_t>(0x004D641B + 3, newValue); // Pet
+		WriteMemoryValue<uint16_t>(0x004E5471 + 4, newValue * 4); // Exp bug fix
+	}
+
+	// Job level limit
+	if (ReadMemoryValue<uint8_t>(0x0060DE69 + 3, byteValue))
+	{
+		uint8_t newValue = 7;
+		printf(" - Job Level Max. (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x0060DE69 + 3, newValue);
+	}
+	
+	// CH Mastery
+	if (ReadMemoryValue<uint32_t>(0x0059C5E6 + 1, uintValue))
+	{
+		uint32_t newValue = 110 * 3;
+		printf(" - CH Masteries (%d) -> (%d)\r\n", uintValue, newValue);
+		WriteMemoryValue<uint32_t>(0x0059C5E6 + 1, newValue);
+	}
+
+	// Union chat participants per guild limit
+	if (ReadMemoryValue<uint8_t>(0x005C4B42 + 4, byteValue))
+	{
+		uint8_t newValue = 25;
+		printf(" - Union chat participants per guild limit (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x005C4B42 + 4, newValue);
+	}
 }
 bool AppManager::InitSQLConnection()
 {
