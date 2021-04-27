@@ -30,6 +30,7 @@ void AppManager::InitConfigFile()
 		ini.SetSpaces(false);
 		// Memory
 		ini.SetLongValue("Account", "CHARACTERS_MAX", 4, "; Maximum characters per account (requires client edit also)");
+		ini.SetBoolValue("Fix", "PARTY_MATCH_1HOUR_DC", true, "; Fix disconnect when party takes more than 1 hour on party match");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -66,12 +67,19 @@ void AppManager::InitPatchValues()
 	// buffers
 	uint8_t byteValue;
 
-	// Maximum level limit
+	// Characters per account limit
 	if (ReadMemoryValue<uint8_t>(0x0040F47C + 2, byteValue))
 	{
 		uint8_t newValue = ini.GetLongValue("Account", "CHARACTERS_MAX", 4);
 		printf(" - ACCOUNT_CHARACTERS_MAX (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x0040F47C + 2, newValue);
 		WriteMemoryValue<uint8_t>(0x00429B83 + 2, newValue);
+	}
+
+	// Fixes
+	if (ini.GetBoolValue("Fix", "PARTY_MATCH_1HOUR_DC", true))
+	{
+		printf(" - FIX_PARTY_MATCH_1HOUR_DC\r\n");
+		WriteMemoryValue<uint16_t>(0x004505D9 + 3, 0x2002);
 	}
 }
