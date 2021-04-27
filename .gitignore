@@ -6,3 +6,5 @@ Debug/*
 Release/*
 vSRO-GameServer/Debug/*
 vSRO-GameServer/Release/*
+vSRO-ShardManager/Debug/*
+vSRO-ShardManager/Release/*

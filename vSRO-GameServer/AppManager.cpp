@@ -24,22 +24,13 @@ void AppManager::Initialize()
 	if (!m_IsInitialized)
 	{
 		m_IsInitialized = true;
-		InitDebugConsole();
 		InitConfigFile();
+		InitDebugConsole();
 		InitPatchValues();
+		InitHooks();
 		if (InitSQLConnection())
-		{
-			InitHooks();
 			StartDatabaseFetch();
-		}
 	}
-}
-void AppManager::InitDebugConsole()
-{
-	AllocConsole();
-	freopen("CONOUT$", "w", stdout);
-	freopen("CONOUT$", "w", stderr);
-	freopen("CONIN$", "r", stdin);
 }
 void AppManager::InitConfigFile()
 {
@@ -59,8 +50,25 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese race will obtain");
 		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 25, "; Union chat participants allowed by guild");
+		// App
+		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
 		ini.SaveFile("vSRO-GameServer.ini");
+	}
+}
+void AppManager::InitDebugConsole()
+{
+	// Load file
+	CSimpleIniA ini;
+	ini.LoadFile("vSRO-ShardManager.ini");
+
+	// Check if console has been deactivated
+	if (ini.GetBoolValue("App", "DEBUG_CONSOLE", true))
+	{
+		AllocConsole();
+		freopen("CONOUT$", "w", stdout);
+		freopen("CONOUT$", "w", stderr);
+		freopen("CONIN$", "r", stdin);
 	}
 }
 void AppManager::InitHooks()

@@ -51,4 +51,3 @@ private: // Private Helpers
 	// Fetch database and execute the required actions
 	static DWORD WINAPI DatabaseFetchThread();
 };
-

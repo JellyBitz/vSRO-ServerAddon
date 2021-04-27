@@ -1,6 +1,6 @@
-# vSRO-GameServer
+# vSRO-ServerAddon
 
-Customizing SR_GameServer (v1.188) behavior through DLL injection.
+Customizing Server Files (v1.188) behavior through DLL injection.
 
 ### Actions
 
