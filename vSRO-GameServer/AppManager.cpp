@@ -123,6 +123,14 @@ void AppManager::InitPatchValues()
 }
 bool AppManager::InitSQLConnection()
 {
+	// Check if the app has been started before
+	CreateMutexA(0, FALSE, "Github.com/JellyBitz/vSRO-ServerAddon");
+	if (GetLastError() == ERROR_ALREADY_EXISTS)
+	{
+		// Avoid create connection
+		return false;
+	}
+
 	std::cout << " * Initializing database connection..." << std::endl;
 
 	// Load file
