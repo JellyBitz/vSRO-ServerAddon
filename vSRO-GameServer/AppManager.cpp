@@ -60,7 +60,7 @@ void AppManager::InitDebugConsole()
 {
 	// Load file
 	CSimpleIniA ini;
-	ini.LoadFile("vSRO-ShardManager.ini");
+	ini.LoadFile("vSRO-GameServer.ini");
 
 	// Check if console has been deactivated
 	if (ini.GetBoolValue("App", "DEBUG_CONSOLE", true))
