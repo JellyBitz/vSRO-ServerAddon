@@ -4,13 +4,13 @@ Customizing Server Files (v1.188) behavior through DLL injection.
 
 ### Actions
 
-Notifies to gameserver actions in realtime with a simple INSERT query into `SRO_VT_SHARD.dbo.NotifyGameServer`
+Execute gameserver actions in realtime with a simple INSERT query into `SRO_VT_SHARD.dbo._ExeGameServer`
 
 #### Supported Actions ID:
 
 1. Adds item(s) to the inventory from character 
 ```sql
-INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
 	Action_ID,
 	CharName16,
@@ -32,7 +32,7 @@ VALUES
 
 2. Updates the gold amount from character by increasing (positive) or decreasing (negative)
 ```sql
-INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
 	Action_ID,
 	CharName16,
@@ -48,7 +48,7 @@ VALUES
 
 3. Updates the Hwan level (Berserk rank) from character by level
 ```sql
-INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
 	Action_ID,
 	CharName16,
@@ -64,14 +64,14 @@ VALUES
 
 4. Moves the character to the position on map
 ```sql
-INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
 	Action_ID,
 	CharName16,
-	Param05, -- Region Id
-	Param06, -- PosX
-	Param07, -- PosY
-	Param08 -- PosZ
+	Param02, -- Region Id
+	Param03, -- PosX
+	Param04, -- PosY
+	Param05 -- PosZ
 )
 VALUES
 (
@@ -86,15 +86,15 @@ VALUES
 
 5. Moves the character to the position on map through game world id
 ```sql
-INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
 	Action_ID,
 	CharName16,
-	Param04, -- GameWorldId
-	Param05, -- Region Id
-	Param06, -- PosX
-	Param07, -- PosY
-	Param08 -- PosZ
+	Param02, -- GameWorldId
+	Param03, -- Region Id
+	Param04, -- PosX
+	Param05, -- PosY
+	Param06 -- PosZ
 )
 VALUES
 (
@@ -110,7 +110,7 @@ VALUES
 
 6. Drops an item near character
 ```sql
-INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
 	Action_ID,
 	CharName16,
@@ -130,7 +130,7 @@ VALUES
 
 7. Transform an item to another one from inventory slot specified
 ```sql
-INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
 	Action_ID,
 	CharName16,
@@ -148,7 +148,7 @@ VALUES
 
 8. Force reloading the character information by teleporting it on the same place
 ```sql
-INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
 	Action_ID,
 	CharName16
@@ -162,7 +162,7 @@ VALUES
 
 9. Adds a buff to the character. The duration will not be lost through teleports
 ```sql
-INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
 	Action_ID,
 	CharName16,
@@ -180,7 +180,7 @@ VALUES
 
 10. Creates a mob in the map position
 ```sql
-INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
 	Action_ID,
 	CharName16,
@@ -204,7 +204,7 @@ VALUES
 
 11. Creates a mob in the map position through game world id
 ```sql
-INSERT INTO [SRO_VT_SHARD].[dbo].[_NotifyGameServer]
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
 	Action_ID,
 	CharName16,

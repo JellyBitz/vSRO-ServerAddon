@@ -165,9 +165,9 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 
 	// Try to create table used to fetch
 	std::wstringstream qCreateTable;
-	qCreateTable << "IF OBJECT_ID(N'dbo._NotifyGameServer', N'U') IS NULL";
+	qCreateTable << "IF OBJECT_ID(N'dbo._ExeGameServer', N'U') IS NULL";
 	qCreateTable << " BEGIN";
-	qCreateTable << " CREATE TABLE dbo._NotifyGameServer";
+	qCreateTable << " CREATE TABLE dbo._ExeGameServer";
 	qCreateTable << " (ID INT IDENTITY(1,1) PRIMARY KEY,";
 	qCreateTable << " Action_ID INT NOT NULL,";
 	qCreateTable << " Action_Result SMALLINT NOT NULL DEFAULT 0,";
@@ -197,7 +197,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 	// Start fetching actions without result
 	std::wstringstream qSelectActions;
 	qSelectActions << "SELECT ID, Action_ID, CharName16, Param01, Param02, Param03, Param04, Param05, Param06, Param07, Param08";
-	qSelectActions << " FROM dbo._NotifyGameServer";
+	qSelectActions << " FROM dbo._ExeGameServer";
 	qSelectActions << " WHERE Action_Result = " << FETCH_ACTION_STATE::UNKNOWN;
 	while (m_IsDatabaseFetchStarted)
 	{
@@ -286,18 +286,18 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 				case 4: // Move Player
 				{
 					// Read params
-					SQLUSMALLINT cParam05, cParam06, cParam08;
-					SQLSMALLINT cParam07;
-					if (m_dbLink.sqlCmd.GetData(8, SQL_C_USHORT, &cParam05, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(9, SQL_C_USHORT, &cParam06, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(10, SQL_C_SHORT, &cParam07, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(11, SQL_C_USHORT, &cParam08, 0, NULL))
+					SQLUSMALLINT cParam02, cParam03, cParam04;
+					SQLSMALLINT cParam05;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_USHORT, &cParam02, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(6, SQL_C_USHORT, &cParam03, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(7, SQL_C_SHORT, &cParam04, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(8, SQL_C_USHORT, &cParam05, 0, NULL))
 					{
 						// Check player existence
 						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 						if (player)
 						{
-							if(!player->MoveTo(cParam05, cParam06, cParam07, cParam08))
+							if(!player->MoveTo(cParam02, cParam03, cParam04, cParam05))
 								actionResult = FETCH_ACTION_STATE::FUNCTION_ERROR;
 						}
 						else
@@ -309,19 +309,19 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 				case 5: // Move Player through WorldId
 				{
 					// Read & check params
-					SQLUSMALLINT cParam04, cParam05, cParam06, cParam08;
-					SQLSMALLINT cParam07;
-					if ( m_dbLink.sqlCmd.GetData(7, SQL_C_USHORT, &cParam04, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(8, SQL_C_USHORT, &cParam05, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(9, SQL_C_USHORT, &cParam06, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(10, SQL_C_SHORT, &cParam07, 0, NULL)
-						&& m_dbLink.sqlCmd.GetData(11, SQL_C_USHORT, &cParam08, 0, NULL))
+					SQLUSMALLINT cParam02, cParam03, cParam04, cParam06;
+					SQLSMALLINT cParam05;
+					if ( m_dbLink.sqlCmd.GetData(5, SQL_C_USHORT, &cParam02, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(6, SQL_C_USHORT, &cParam03, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(7, SQL_C_USHORT, &cParam04, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(8, SQL_C_SHORT, &cParam05, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(9, SQL_C_USHORT, &cParam06, 0, NULL))
 					{
 						// Check player existence
 						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 						if (player)
 						{
-							if(!player->MoveTo(cParam04 + 0x10000, cParam05, cParam06, cParam07, cParam08))
+							if(!player->MoveTo(cParam02 + 0x10000, cParam03, cParam04, cParam05, cParam06))
 								actionResult = FETCH_ACTION_STATE::FUNCTION_ERROR;
 						}
 						else
@@ -463,7 +463,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 
 			// Update action result from table by row id
 			std::wstringstream qUpdateResult;
-			qUpdateResult << "UPDATE dbo._NotifyGameServer";
+			qUpdateResult << "UPDATE dbo._ExeGameServer";
 			qUpdateResult << " SET Action_Result = " << actionResult;
 			qUpdateResult << " WHERE ID = " << cID;
 			m_dbLinkHelper.sqlCmd.ExecuteQuery((SQLWCHAR*)qUpdateResult.str().c_str());
