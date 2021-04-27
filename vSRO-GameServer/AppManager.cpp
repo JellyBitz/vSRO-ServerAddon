@@ -9,7 +9,9 @@
 #include <exception>
 // Gameserver stuffs
 #include "Silkroad/CGObjManager.h"
+// Utils
 #include "Utils/Memory.h"
+#include "Utils/SimpleIni.h"
 
 /// Static stuffs
 bool AppManager::m_IsInitialized;
@@ -23,6 +25,7 @@ void AppManager::Initialize()
 	{
 		m_IsInitialized = true;
 		InitDebugConsole();
+		InitConfigFile();
 		InitPatchValues();
 		if (InitSQLConnection())
 		{
@@ -38,6 +41,28 @@ void AppManager::InitDebugConsole()
 	freopen("CONOUT$", "w", stderr);
 	freopen("CONIN$", "r", stdin);
 }
+void AppManager::InitConfigFile()
+{
+	CSimpleIniA ini;
+	// Try to load it or create a new one
+	if (ini.LoadFile("vSRO-GameServer.ini") != SI_Error::SI_OK)
+	{
+		ini.SetSpaces(false);
+		// Sql
+		ini.SetValue("Sql", "HOST", "localhost", "; SQL Server address or name");
+		ini.SetValue("Sql", "PORT", "1433", "; SQL Server port");
+		ini.SetValue("Sql", "USER", "sa", "; Username credential");
+		ini.SetValue("Sql", "PASS", "12341", "; Password credential");
+		ini.SetValue("Sql", "DB_SHARD", "SRO_VT_SHARD", "; Name used for the specified silkroad database");
+		// Memory
+		ini.SetLongValue("Server", "LEVEL_MAX", 110, "; Maximum level that can be reached on server");
+		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
+		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese race will obtain");
+		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 25, "; Union chat participants allowed by guild");
+		// Save it
+		ini.SaveFile("vSRO-GameServer.ini");
+	}
+}
 void AppManager::InitHooks()
 {
 
@@ -45,6 +70,11 @@ void AppManager::InitHooks()
 void AppManager::InitPatchValues()
 {
 	std::cout << " * Initializing patches..." << std::endl;
+
+	// Load file
+	CSimpleIniA ini;
+	ini.LoadFile("vSRO-GameServer.ini");
+
 	// buffers
 	uint8_t byteValue;
 	uint32_t uintValue;
@@ -52,8 +82,8 @@ void AppManager::InitPatchValues()
 	// Maximum level limit
 	if (ReadMemoryValue<uint8_t>(0x004E52C7 + 2, byteValue))
 	{
-		uint8_t newValue = 110;
-		printf(" - Level Max. (%d) -> (%d)\r\n", byteValue, newValue);
+		uint8_t newValue = ini.GetLongValue("Server", "LEVEL_MAX", 110);
+		printf(" - SERVER_LEVEL_MAX (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x004E52C7 + 2, newValue); // Character
 		WriteMemoryValue<uint8_t>(0x004D641B + 3, newValue); // Pet
 		WriteMemoryValue<uint16_t>(0x004E5471 + 4, newValue * 4); // Exp bug fix
@@ -62,34 +92,46 @@ void AppManager::InitPatchValues()
 	// Job level limit
 	if (ReadMemoryValue<uint8_t>(0x0060DE69 + 3, byteValue))
 	{
-		uint8_t newValue = 7;
-		printf(" - Job Level Max. (%d) -> (%d)\r\n", byteValue, newValue);
+		uint8_t newValue = ini.GetLongValue("Job", "LEVEL_MAX", 7);
+		printf(" - JOB_LEVEL_MAX. (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x0060DE69 + 3, newValue);
 	}
 	
 	// CH Mastery
 	if (ReadMemoryValue<uint32_t>(0x0059C5E6 + 1, uintValue))
 	{
-		uint32_t newValue = 110 * 3;
-		printf(" - CH Masteries (%d) -> (%d)\r\n", uintValue, newValue);
+		uint32_t newValue = ini.GetLongValue("Race", "CH_TOTAL_MASTERIES", 330);
+		printf(" - RACE_CH_TOTAL_MASTERIES (%d) -> (%d)\r\n", uintValue, newValue);
 		WriteMemoryValue<uint32_t>(0x0059C5E6 + 1, newValue);
 	}
 
 	// Union chat participants per guild limit
 	if (ReadMemoryValue<uint8_t>(0x005C4B42 + 4, byteValue))
 	{
-		uint8_t newValue = 25;
-		printf(" - Union chat participants per guild limit (%d) -> (%d)\r\n", byteValue, newValue);
+		uint8_t newValue = ini.GetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 25);
+		printf(" - GUILD_UNION_CHAT_PARTICIPANTS (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x005C4B42 + 4, newValue);
 	}
 }
 bool AppManager::InitSQLConnection()
 {
 	std::cout << " * Initializing database connection..." << std::endl;
-	auto connString = (SQLWCHAR*)L"DRIVER={SQL Server};SERVER=localhost, 1433;DATABASE=master;UID=sa;PWD=12341;";
+
+	// Load file
+	CSimpleIniA ini;
+	ini.LoadFile("vSRO-GameServer.ini");
+
+	// Create connection string
+	std::wstringstream connString;
+	connString << "DRIVER={SQL Server};";
+	connString << "SERVER=" << ini.GetValue("Sql", "HOST", "localhost") << ", " << ini.GetValue("Sql", "PORT", "1433") << ";";
+	connString << "DATABASE=" << ini.GetValue("Sql", "DB_SHARD", "SRO_VT_SHARD") << ";";
+	connString << "UID=" << ini.GetValue("Sql", "USER", "sa") << ";";
+	connString << "PWD=" << ini.GetValue("Sql", "PASS", "12341") << ";";
+
 	// Try to open the database connections
-	if (m_dbLink.sqlConn.Open(connString) && m_dbLink.sqlCmd.Open(m_dbLink.sqlConn)
-		&& m_dbLinkHelper.sqlConn.Open(connString) && m_dbLinkHelper.sqlCmd.Open(m_dbLinkHelper.sqlConn))
+	if (m_dbLink.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbLink.sqlCmd.Open(m_dbLink.sqlConn)
+		&& m_dbLinkHelper.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbLinkHelper.sqlCmd.Open(m_dbLinkHelper.sqlConn))
 	{
 		return true;
 	}
@@ -115,9 +157,9 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 
 	// Try to create table used to fetch
 	std::wstringstream qCreateTable;
-	qCreateTable << "IF OBJECT_ID(N'SRO_VT_SHARD.dbo._NotifyGameServer', N'U') IS NULL";
+	qCreateTable << "IF OBJECT_ID(N'dbo._NotifyGameServer', N'U') IS NULL";
 	qCreateTable << " BEGIN";
-	qCreateTable << " CREATE TABLE SRO_VT_SHARD.dbo._NotifyGameServer";
+	qCreateTable << " CREATE TABLE dbo._NotifyGameServer";
 	qCreateTable << " (ID INT IDENTITY(1,1) PRIMARY KEY,";
 	qCreateTable << " Action_ID INT NOT NULL,";
 	qCreateTable << " Action_Result SMALLINT NOT NULL DEFAULT 0,";
@@ -147,7 +189,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 	// Start fetching actions without result
 	std::wstringstream qSelectActions;
 	qSelectActions << "SELECT ID, Action_ID, CharName16, Param01, Param02, Param03, Param04, Param05, Param06, Param07, Param08";
-	qSelectActions << " FROM SRO_VT_SHARD.dbo._NotifyGameServer";
+	qSelectActions << " FROM dbo._NotifyGameServer";
 	qSelectActions << " WHERE Action_Result = " << FETCH_ACTION_STATE::UNKNOWN;
 	while (m_IsDatabaseFetchStarted)
 	{
@@ -413,7 +455,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 
 			// Update action result from table by row id
 			std::wstringstream qUpdateResult;
-			qUpdateResult << "UPDATE SRO_VT_SHARD.dbo._NotifyGameServer";
+			qUpdateResult << "UPDATE dbo._NotifyGameServer";
 			qUpdateResult << " SET Action_Result = " << actionResult;
 			qUpdateResult << " WHERE ID = " << cID;
 			m_dbLinkHelper.sqlCmd.ExecuteQuery((SQLWCHAR*)qUpdateResult.str().c_str());

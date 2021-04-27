@@ -38,6 +38,8 @@ public: // Public Methods
 private: // Private Helpers
 	// Starts console if required
 	static void InitDebugConsole();
+	// Initialize the default config file if doesn't exists
+	static void InitConfigFile();
 	// Initialize all hooks required
 	static void InitHooks();
 	// Set all offsets values
