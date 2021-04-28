@@ -2,11 +2,18 @@
 
 Customizing Server Files (v1.188) behavior through DLL injection.
 
-### Actions
+## Features
+- Patch values from memory directly
+- Define all options from the respective file
+- Easy to inject using STUD_PE
+- Execute Gameserver actions in realtime
+- Multi Gameserver support
 
-Execute gameserver actions in realtime with a simple INSERT query into `SRO_VT_SHARD.dbo._ExeGameServer`
+## Gameserver Actions
 
-#### Supported Actions ID:
+Execute gameserver actions in realtime with a simple `INSERT` query into `SRO_VT_SHARD.dbo._ExeGameServer` which is created automatically if doesn't exist.
+
+### Examples
 
 1. Adds item(s) to the inventory from character 
 ```sql
@@ -228,7 +235,7 @@ VALUES
 );
 ```
 
-#### Action Result Code
+### Action Result Code
 
 ```C++
 UNKNOWN = 0
@@ -239,3 +246,13 @@ PARAMS_NOT_SUPPLIED = 4
 CHARNAME_NOT_FOUND = 5
 FUNCTION_ERROR = 6
 ```
+
+---
+> ### Do you feel this project is helping you a lot ?
+> ### Support me! [Buy me a coffee <img src="https://twemoji.maxcdn.com/2/72x72/2615.png" width="18" height="18">](https://www.buymeacoffee.com/JellyBitz "Coffee <3")
+> 
+> ### Created with [<img title="Yes, Code!" src="https://twemoji.maxcdn.com/2/72x72/1f499.png" width="18" height="18">](#)
+
+---
+> ##### Hey Thanks!
+> - [Elitepvpers](https://www.elitepvpers.com/forum/silkroad-online/) ASM/C++ coders leaving source codes and ideas to create this stuff
