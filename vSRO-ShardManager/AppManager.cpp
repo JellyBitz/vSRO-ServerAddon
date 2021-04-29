@@ -29,7 +29,8 @@ void AppManager::InitConfigFile()
 	{
 		ini.SetSpaces(false);
 		// Memory
-		ini.SetLongValue("Account", "CHARACTERS_MAX", 4, "; Maximum characters per account (requires client edit also)");
+		ini.SetLongValue("Account", "CHARACTERS_MAX", 4, "; Maximum characters per account (requires client edit and sql procedure also)");
+		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
 		ini.SetBoolValue("Fix", "PARTY_MATCH_1HOUR_DC", true, "; Fix disconnect when party takes more than 1 hour on party match");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
@@ -67,7 +68,7 @@ void AppManager::InitPatchValues()
 	// buffers
 	uint8_t byteValue;
 
-	// Characters per account limit
+	// Account
 	if (ReadMemoryValue<uint8_t>(0x0040F47C + 2, byteValue))
 	{
 		uint8_t newValue = ini.GetLongValue("Account", "CHARACTERS_MAX", 4);
@@ -76,7 +77,15 @@ void AppManager::InitPatchValues()
 		WriteMemoryValue<uint8_t>(0x00429B83 + 2, newValue);
 	}
 
-	// Fixes
+	// Guild
+	if (ReadMemoryValue<uint8_t>(0x00434311 + 1, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Guild", "UNION_LIMIT", 8);
+		printf(" - GUILD_UNION_LIMIT (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x00434311 + 1, newValue);
+	}
+
+	// Fix
 	if (ini.GetBoolValue("Fix", "PARTY_MATCH_1HOUR_DC", true))
 	{
 		printf(" - FIX_PARTY_MATCH_1HOUR_DC\r\n");
