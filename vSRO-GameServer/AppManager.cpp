@@ -48,7 +48,7 @@ void AppManager::InitConfigFile()
 		// Memory
 		ini.SetLongValue("Server", "LEVEL_MAX", 110, "; Maximum level that can be reached on server");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
-		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese race will obtain");
+		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
 		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 25, "; Union chat participants allowed by guild");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
@@ -94,7 +94,7 @@ void AppManager::InitPatchValues()
 		printf(" - SERVER_LEVEL_MAX (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x004E52C7 + 2, newValue); // Character
 		WriteMemoryValue<uint8_t>(0x004D641B + 3, newValue); // Pet
-		WriteMemoryValue<uint16_t>(0x004E5471 + 4, newValue * 4); // Exp bug fix
+		WriteMemoryValue<uint16_t>(0x004E5471 + 4, (newValue - 1) * 4); // Exp bug fix
 	}
 
 	// Job level limit
