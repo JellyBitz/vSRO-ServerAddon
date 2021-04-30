@@ -56,6 +56,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT", 32, "; Guild members limit");
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
 		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12, "; Union chat participants allowed by guild");
+		ini.SetLongValue("Fix", "AGENT_SERVER_CAPACITY", 1000, "; Set capacity supported by the connected agent server");
 		ini.SetBoolValue("Fix", "HIGH_RATES_CONFIG", true, "; Fix rates (ExpRatio/1000) to use higher values than 2500");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
@@ -93,7 +94,6 @@ void AppManager::InitPatchValues()
 	// buffers
 	uint8_t byteValue;
 	uint32_t uintValue;
-	float floatValue;
 
 	// Server
 	if (ReadMemoryValue<uint8_t>(0x004E52C7 + 2, byteValue))
@@ -156,7 +156,7 @@ void AppManager::InitPatchValues()
 	if (ReadMemoryValue<uint32_t>(0x0059C5E6 + 1, uintValue))
 	{
 		uint32_t newValue = ini.GetLongValue("Race", "CH_TOTAL_MASTERIES", 330);
-		printf(" - RACE_CH_TOTAL_MASTERIES (%d) -> (%d)\r\n", uintValue, newValue);
+		printf(" - RACE_CH_TOTAL_MASTERIES (%u) -> (%u)\r\n", uintValue, newValue);
 		WriteMemoryValue<uint32_t>(0x0059C5E6 + 1, newValue);
 	}
 
@@ -182,6 +182,13 @@ void AppManager::InitPatchValues()
 	}
 
 	// Fixes
+	if (ReadMemoryValue<uint32_t>(0x004744BC + 1, uintValue))
+	{
+		uint32_t newValue = ini.GetLongValue("Fix", "AGENT_SERVER_CAPACITY", 1000);
+		printf(" - FIX_AGENT_SERVER_CAPACITY (%u) -> (%u)\r\n", uintValue, newValue);
+		WriteMemoryValue<uint32_t>(0x004744BC + 1, newValue);
+		WriteMemoryValue<uint32_t>(0x004744C7 + 1, newValue);
+	}
 	if (ini.GetBoolValue("Fix", "HIGH_RATES_CONFIG", true))
 	{
 		printf(" - FIX_HIGH_RATES_CONFIG\r\n");
