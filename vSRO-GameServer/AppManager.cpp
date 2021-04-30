@@ -49,14 +49,14 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "LEVEL_MAX", 110, "; Maximum level that can be reached on server");
 		ini.SetDoubleValue("Server", "EXP_RATE", 1.0, "; Experience multiplier");
 		ini.SetDoubleValue("Server", "DROP_RATE", 1.0, "; Drop multiplier");
-		ini.SetLongValue("Server", "GOLD_EXCHANGE_LIMIT", 1000000000, "; Gold maximum amount that can be exchanged between players (including stalls)");
+		ini.SetLongValue("Server", "GOLD_EXCHANGE_LIMIT", 9999999999, "; Gold maximum amount that can be exchanged between players (including stalls)");
 		ini.SetLongValue("Server", "PARTY_MOB_MEMBERS_REQUIRED", 2, "; Party members required to find monsters party type");
 		ini.SetLongValue("Server", "PARTY_MOB_SPAWN_PROBABILITY", 50, "; % Probability for party mob spawns");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT", 32, "; Guild members limit");
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
-		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 25, "; Union chat participants allowed by guild");
+		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12, "; Union chat participants allowed by guild");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -106,7 +106,7 @@ void AppManager::InitPatchValues()
 	}
 	if (ReadMemoryValue<uint32_t>(0x00480F5E + 4, uintValue))
 	{
-		uint32_t newValue = ini.GetLongValue("Server", "GOLD_EXCHANGE_LIMIT", 1000000000);
+		uint32_t newValue = ini.GetLongValue("Server", "GOLD_EXCHANGE_LIMIT", 9999999999);
 		printf(" - SERVER_GOLD_EXCHANGE_LIMIT (%d) -> (%d)\r\n", uintValue, newValue);
 		// Exchange
 		WriteMemoryValue<uint32_t>(0x00480F5E + 4, newValue);
@@ -181,7 +181,7 @@ void AppManager::InitPatchValues()
 	}
 	if (ReadMemoryValue<uint8_t>(0x005C4B42 + 4, byteValue))
 	{
-		uint8_t newValue = ini.GetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 25);
+		uint8_t newValue = ini.GetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12);
 		printf(" - GUILD_UNION_CHAT_PARTICIPANTS (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x005C4B42 + 4, newValue);
 	}

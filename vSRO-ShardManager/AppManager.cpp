@@ -29,7 +29,7 @@ void AppManager::InitConfigFile()
 	{
 		ini.SetSpaces(false);
 		// Memory
-		ini.SetLongValue("Account", "CHARACTERS_MAX", 4, "; Maximum characters per account (requires client edit and sql procedure also)");
+		ini.SetLongValue("Account", "CHARACTERS_MAX", 4, "; Maximum characters per account");
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
 		ini.SetBoolValue("Fix", "PARTY_MATCH_1HOUR_DC", true, "; Fix disconnect when party takes more than 1 hour on party match");
 		// App
