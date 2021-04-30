@@ -53,6 +53,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "PARTY_MOB_SPAWN_PROBABILITY", 50, "; % Probability for party mob spawns");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
+		ini.SetLongValue("Guild", "MEMBERS_LIMIT", 32, "; Guild members limit");
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
 		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 25, "; Union chat participants allowed by guild");
 		// App
@@ -144,6 +145,13 @@ void AppManager::InitPatchValues()
 	}
 
 	// Guild
+	{
+		uint8_t newValue = ini.GetLongValue("Guild", "MEMBERS_LIMIT", 32);
+		printf(" - GUILD_MEMBERS_LIMIT (?) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint16_t>(0x005D0FD6,0xFA83); WriteMemoryValue<uint8_t>(0x005D0FD6 + 2, newValue); // CMP edx,newValue
+		for (int i = 0; i < 4; i++)
+			WriteMemoryValue<uint8_t>(0x005D0FD6 + 2 + 1 + i, 0x90); // NOP
+	}
 	if (ReadMemoryValue<uint8_t>(0x005B8EA1 + 1, byteValue))
 	{
 		uint8_t newValue = ini.GetLongValue("Guild", "UNION_LIMIT", 8);
