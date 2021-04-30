@@ -1,0 +1,8 @@
+# Ignore everything
+*.*
+
+# Exceptions
+!.gitignore
+!README.md
+!vSRO-GameServer.dll
+!vSRO-ShardManager.dll

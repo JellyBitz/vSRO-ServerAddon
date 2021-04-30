@@ -47,9 +47,16 @@ void AppManager::InitConfigFile()
 		ini.SetValue("Sql", "DB_SHARD", "SRO_VT_SHARD", "; Name used for the specified silkroad database");
 		// Memory
 		ini.SetLongValue("Server", "LEVEL_MAX", 110, "; Maximum level that can be reached on server");
+		ini.SetDoubleValue("Server", "EXP_RATE", 1.0, "; Experience multiplier");
+		ini.SetDoubleValue("Server", "DROP_RATE", 1.0, "; Drop multiplier");
+		ini.SetLongValue("Server", "GOLD_EXCHANGE_LIMIT", 9999999999, "; Gold maximum amount that can be exchanged between players (including stalls)");
+		ini.SetLongValue("Server", "PARTY_MOB_MEMBERS_REQUIRED", 2, "; Party members required to find monsters party type");
+		ini.SetLongValue("Server", "PARTY_MOB_SPAWN_PROBABILITY", 50, "; % Probability for party mob spawns");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
-		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 25, "; Union chat participants allowed by guild");
+		ini.SetLongValue("Guild", "MEMBERS_LIMIT", 32, "; Guild members limit");
+		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
+		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12, "; Union chat participants allowed by guild");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -86,8 +93,9 @@ void AppManager::InitPatchValues()
 	// buffers
 	uint8_t byteValue;
 	uint32_t uintValue;
+	float floatValue;
 
-	// Maximum level limit
+	// Server
 	if (ReadMemoryValue<uint8_t>(0x004E52C7 + 2, byteValue))
 	{
 		uint8_t newValue = ini.GetLongValue("Server", "LEVEL_MAX", 110);
@@ -96,8 +104,52 @@ void AppManager::InitPatchValues()
 		WriteMemoryValue<uint8_t>(0x004D641B + 3, newValue); // Pet
 		WriteMemoryValue<uint16_t>(0x004E5471 + 4, (newValue - 1) * 4); // Exp bug fix
 	}
+	if (ReadMemoryValue<uint32_t>(0x00480F5E + 4, uintValue))
+	{
+		uint32_t newValue = ini.GetLongValue("Server", "GOLD_EXCHANGE_LIMIT", 9999999999);
+		printf(" - SERVER_GOLD_EXCHANGE_LIMIT (%d) -> (%d)\r\n", uintValue, newValue);
+		// Exchange
+		WriteMemoryValue<uint32_t>(0x00480F5E + 4, newValue);
+		WriteMemoryValue<uint32_t>(0x004D8F1A + 2, newValue);
+		WriteMemoryValue<uint32_t>(0x004D8F22 + 2, newValue);
+		WriteMemoryValue<uint32_t>(0x004F7734 + 2, newValue);
+		WriteMemoryValue<uint32_t>(0x004F7746 + 4, newValue);
+		// Stall
+		WriteMemoryValue<uint8_t>(0x00471B00 + 2, newValue >> 4);
+		WriteMemoryValue<uint32_t>(0x00471B07 + 1, newValue && 0xFFFFFFFF);
+		WriteMemoryValue<uint8_t>(0x00471B00 + 2, newValue >> 4);
+		WriteMemoryValue<uint32_t>(0x00471B07 + 1, newValue && 0xFFFFFFFF);
+		WriteMemoryValue<uint8_t>(0x00472FF5 + 2, newValue >> 4);
+		WriteMemoryValue<uint32_t>(0x00473008 + 1, newValue && 0xFFFFFFFF);
+		WriteMemoryValue<uint8_t>(0x0047ABD8 + 2, newValue >> 4);
+		WriteMemoryValue<uint32_t>(0x0047ABE3 + 1, newValue && 0xFFFFFFFF);
+	}
+	if (ReadMemoryValue<float>(0x00B45B90, floatValue))
+	{
+		float newValue = ini.GetDoubleValue("Server", "EXP_RATE", 1.0);
+		printf(" - SERVER_EXP_RATE (%.1f) -> (%.1f)\r\n", floatValue, newValue);
+		WriteMemoryValue<float>(0x00B45B90, newValue);
+	}
+	if (ReadMemoryValue<float>(0x00B45B84, floatValue))
+	{
+		float newValue = ini.GetDoubleValue("Server", "DROP_RATE", 1.0);
+		printf(" - SERVER_DROP_RATE (%.1f) -> (%.1f)\r\n", floatValue, newValue);
+		WriteMemoryValue<float>(0x00B45B84, newValue);
+	}
+	if(ReadMemoryValue<uint8_t>(0x00558F20 + 4, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Server", "PARTY_MOB_MEMBERS_REQUIRED", 2);
+		printf(" - SERVER_PARTY_MOB_MEMBERS_REQUIRED (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x00558F20 + 4, newValue);
+	}
+	if (ReadMemoryValue<uint8_t>(0x005608E2 + 2, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Server", "PARTY_MOB_SPAWN_PROBABILITY", 50);
+		printf(" - SERVER_PARTY_MOB_SPAWN_PROBABILITY (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x005608E2 + 2, newValue);
+	}
 
-	// Job level limit
+	// Job
 	if (ReadMemoryValue<uint8_t>(0x0060DE69 + 3, byteValue))
 	{
 		uint8_t newValue = ini.GetLongValue("Job", "LEVEL_MAX", 7);
@@ -105,7 +157,7 @@ void AppManager::InitPatchValues()
 		WriteMemoryValue<uint8_t>(0x0060DE69 + 3, newValue);
 	}
 	
-	// CH Mastery
+	// Race
 	if (ReadMemoryValue<uint32_t>(0x0059C5E6 + 1, uintValue))
 	{
 		uint32_t newValue = ini.GetLongValue("Race", "CH_TOTAL_MASTERIES", 330);
@@ -113,10 +165,23 @@ void AppManager::InitPatchValues()
 		WriteMemoryValue<uint32_t>(0x0059C5E6 + 1, newValue);
 	}
 
-	// Union chat participants per guild limit
+	// Guild
+	{
+		uint8_t newValue = ini.GetLongValue("Guild", "MEMBERS_LIMIT", 32);
+		printf(" - GUILD_MEMBERS_LIMIT (?) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint16_t>(0x005D0FD6,0xFA83); WriteMemoryValue<uint8_t>(0x005D0FD6 + 2, newValue); // CMP edx,newValue
+		for (int i = 0; i < 4; i++)
+			WriteMemoryValue<uint8_t>(0x005D0FD6 + 2 + 1 + i, 0x90); // NOP
+	}
+	if (ReadMemoryValue<uint8_t>(0x005B8EA1 + 1, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Guild", "UNION_LIMIT", 8);
+		printf(" - GUILD_UNION_LIMIT (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x005B8EA1 + 1, newValue);
+	}
 	if (ReadMemoryValue<uint8_t>(0x005C4B42 + 4, byteValue))
 	{
-		uint8_t newValue = ini.GetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 25);
+		uint8_t newValue = ini.GetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12);
 		printf(" - GUILD_UNION_CHAT_PARTICIPANTS (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x005C4B42 + 4, newValue);
 	}

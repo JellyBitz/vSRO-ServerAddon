@@ -4,10 +4,9 @@ Customizing Server Files (v1.188) behavior through DLL injection.
 
 ## Features
 - Patch values from memory directly
-- Define all options from the respective file
+- Define all options from the respective config file
 - Easy to inject using STUD_PE
-- Execute Gameserver actions in realtime
-- Multi Gameserver support
+- Execute actions from Gameserver (the first gameserver running will execute these actions)
 
 ## Gameserver Actions
 
