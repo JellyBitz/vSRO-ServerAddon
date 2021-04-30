@@ -30,7 +30,7 @@ This is a compilations of ASM/editions for vSRO (1.188) that you'll need to chan
 0073FACC | 6A 6E                    | push 6E                           | Party Match
 ```
 
-### SERVER_GOLD_EXCHANGE_LIMIT
+### SERVER_STALL_PRICE_LIMIT
 
 0x02540BE3FF = 9999999999 (9.99b)
 
