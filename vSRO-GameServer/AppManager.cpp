@@ -12,6 +12,7 @@
 // Utils
 #include "Utils/Memory.h"
 #include "Utils/SimpleIni.h"
+#pragma warning(disable:4244) // Bitwise operations warnings
 
 /// Static stuffs
 bool AppManager::m_IsInitialized;
@@ -47,8 +48,6 @@ void AppManager::InitConfigFile()
 		ini.SetValue("Sql", "DB_SHARD", "SRO_VT_SHARD", "; Name used for the specified silkroad database");
 		// Memory
 		ini.SetLongValue("Server", "LEVEL_MAX", 110, "; Maximum level that can be reached on server");
-		ini.SetDoubleValue("Server", "EXP_RATE", 1.0, "; Experience multiplier");
-		ini.SetDoubleValue("Server", "DROP_RATE", 1.0, "; Drop multiplier");
 		ini.SetLongValue("Server", "STALL_PRICE_LIMIT", 9999999999, "; Maximum price that can be stalled");
 		ini.SetLongValue("Server", "PARTY_MOB_MEMBERS_REQUIRED", 2, "; Party members required to find monsters party type");
 		ini.SetLongValue("Server", "PARTY_MOB_SPAWN_PROBABILITY", 50, "; % Probability for party mob spawns");
@@ -57,6 +56,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT", 32, "; Guild members limit");
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
 		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12, "; Union chat participants allowed by guild");
+		ini.SetBoolValue("Fix", "HIGH_RATES_CONFIG", true, "; Fix rates (ExpRatio/1000) to use higher values than 2500");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -123,25 +123,13 @@ void AppManager::InitPatchValues()
 		{
 			if (newValue > 4000000000u)
 				newValue = 4000000000u;
-			printf(" - SERVER_EXCHANGE_GOLD_LIMIT (%u) -> (%u)\r\n", uintValue, newValue);
+			printf(" - SERVER_EXCHANGE_GOLD_LIMIT (%u) -> (%u)\r\n", uintValue, (uint32_t)newValue);
 			WriteMemoryValue<uint32_t>(0x00480F5E + 4, newValue);
 			WriteMemoryValue<uint32_t>(0x004D8F1A + 2, newValue);
 			WriteMemoryValue<uint32_t>(0x004D8F22 + 2, newValue);
 			WriteMemoryValue<uint32_t>(0x004F7734 + 2, newValue);
 			WriteMemoryValue<uint32_t>(0x004F7746 + 4, newValue);
 		}
-	}
-	if (ReadMemoryValue<float>(0x00B45B90, floatValue))
-	{
-		float newValue = ini.GetDoubleValue("Server", "EXP_RATE", 1.0);
-		printf(" - SERVER_EXP_RATE (%.1f) -> (%.1f)\r\n", floatValue, newValue);
-		WriteMemoryValue<float>(0x00B45B90, newValue);
-	}
-	if (ReadMemoryValue<float>(0x00B45B84, floatValue))
-	{
-		float newValue = ini.GetDoubleValue("Server", "DROP_RATE", 1.0);
-		printf(" - SERVER_DROP_RATE (%.1f) -> (%.1f)\r\n", floatValue, newValue);
-		WriteMemoryValue<float>(0x00B45B84, newValue);
 	}
 	if(ReadMemoryValue<uint8_t>(0x00558F20 + 4, byteValue))
 	{
@@ -175,7 +163,7 @@ void AppManager::InitPatchValues()
 	// Guild
 	{
 		uint8_t newValue = ini.GetLongValue("Guild", "MEMBERS_LIMIT", 32);
-		printf(" - GUILD_MEMBERS_LIMIT (?) -> (%d)\r\n", byteValue, newValue);
+		printf(" - GUILD_MEMBERS_LIMIT (?) -> (%d)\r\n", newValue);
 		WriteMemoryValue<uint16_t>(0x005D0FD6,0xFA83); WriteMemoryValue<uint8_t>(0x005D0FD6 + 2, newValue); // CMP edx,newValue
 		for (int i = 0; i < 4; i++)
 			WriteMemoryValue<uint8_t>(0x005D0FD6 + 2 + 1 + i, 0x90); // NOP
@@ -191,6 +179,16 @@ void AppManager::InitPatchValues()
 		uint8_t newValue = ini.GetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12);
 		printf(" - GUILD_UNION_CHAT_PARTICIPANTS (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x005C4B42 + 4, newValue);
+	}
+
+	// Fixes
+	if (ini.GetBoolValue("Fix", "HIGH_RATES_CONFIG", true))
+	{
+		printf(" - FIX_HIGH_RATES_CONFIG\r\n");
+		WriteMemoryValue<uint8_t>(0x0042714C + 2, 0x42); // ExpRatio 
+		WriteMemoryValue<uint8_t>(0x004271F5 + 2, 0x42); // ExpRatioParty
+		WriteMemoryValue<uint8_t>(0x004272A0 + 2, 0x42); // DropItemRatio
+		WriteMemoryValue<uint8_t>(0x00427349 + 2, 0x42); // DropGoldAmountCoef
 	}
 }
 bool AppManager::InitSQLConnection()
