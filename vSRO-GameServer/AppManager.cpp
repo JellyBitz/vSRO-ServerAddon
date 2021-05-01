@@ -56,6 +56,13 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT", 32, "; Guild members limit");
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
 		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12, "; Union chat participants allowed by guild");
+		ini.SetValue("Event","CTF_ITEM_REWARD","ITEM_ETC_E070919_TROPHY","; Item reward from Capture The Flag");
+		ini.SetLongValue("Event", "CTF_ITEM_REWARD_AMOUNT", 1, "; Amount to obtain per every kill");
+		ini.SetValue("Event","BA_ITEM_REWARD","ITEM_ETC_ARENA_COIN","; Item reward from Battle Arena");
+		ini.SetLongValue("Event", "BA_ITEM_REWARD_GJ_W_AMOUNT", 7, "; Amount to obtain winning on Guild/Job mode");
+		ini.SetLongValue("Event", "BA_ITEM_REWARD_GJ_L_AMOUNT", 2, "; Amount to obtain loosing");
+		ini.SetLongValue("Event", "BA_ITEM_REWARD_PR_W_AMOUNT", 7, "; Amount to obtain winning on Party/Random mode");
+		ini.SetLongValue("Event", "BA_ITEM_REWARD_PR_L_AMOUNT", 2, "; Amount to obtain loosing");
 		ini.SetLongValue("Fix", "AGENT_SERVER_CAPACITY", 1000, "; Set capacity supported by the connected agent server");
 		ini.SetBoolValue("Fix", "HIGH_RATES_CONFIG", true, "; Fix rates (ExpRatio/1000) to use higher values than 2500");
 		// App
@@ -148,7 +155,7 @@ void AppManager::InitPatchValues()
 	if (ReadMemoryValue<uint8_t>(0x0060DE69 + 3, byteValue))
 	{
 		uint8_t newValue = ini.GetLongValue("Job", "LEVEL_MAX", 7);
-		printf(" - JOB_LEVEL_MAX. (%d) -> (%d)\r\n", byteValue, newValue);
+		printf(" - JOB_LEVEL_MAX (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x0060DE69 + 3, newValue);
 	}
 	
@@ -179,6 +186,68 @@ void AppManager::InitPatchValues()
 		uint8_t newValue = ini.GetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12);
 		printf(" - GUILD_UNION_CHAT_PARTICIPANTS (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x005C4B42 + 4, newValue);
+	}
+
+	// Event
+	{
+		const char* newValue = ini.GetValue("Event", "CTF_ITEM_REWARD", "");
+		auto newValueLen = strlen(newValue);
+		// Change value if it's not empty and the CodeName is shorter than 128 bytes
+		if (newValueLen != 0 && newValueLen <= 128)
+		{
+			auto currentValue = ReadMemoryString(0x00646D42 + 1);
+			printf(" - EVENT_CTF_ITEM_REWARD (%s) -> (%s)\r\n", currentValue.c_str(), newValue);
+			// Overwrites new char* into empty memory
+			WriteMemoryString(0x00AD8FFD - 130, newValue);
+			// Set char* pointer to the new value
+			WriteMemoryValue<uint32_t>(0x00646D42 + 1, 0x00AD8FFD - 130);
+			WriteMemoryValue<uint32_t>(0x005F19A9 + 1, 0x00AD8FFD - 130);
+			WriteMemoryValue<uint32_t>(0x00876935 + 6, 0x00AD8FFD - 130);
+		}
+	}
+	if (ReadMemoryValue<uint8_t>(0x00646C93 + 4, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Event", "CTF_ITEM_REWARD_AMOUNT", 1);
+		printf(" - EVENT_CTF_ITEM_REWARD_AMOUNT (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x00646C93 + 4, newValue);
+	}
+	{
+		const char* newValue = ini.GetValue("Event", "BA_ITEM_REWARD", "");
+		auto newValueLen = strlen(newValue);
+		// Change value if it's not empty and the CodeName is shorter than 128 bytes
+		if (newValueLen != 0 && newValueLen <= 128)
+		{
+			auto currentValue = ReadMemoryString(0x006691C6 + 1);
+			printf(" - EVENT_BA_ITEM_REWARD (%s) -> (%s)\r\n", currentValue.c_str(), newValue);
+			// Overwrites new char* into empty memory
+			WriteMemoryString(0x00AD8FFD - 130 - 130, newValue);
+			// Set char* pointer to the new value
+			WriteMemoryValue<uint32_t>(0x006691C6 + 1, 0x00AD8FFD - 130 - 130);
+		}
+	}
+	if (ReadMemoryValue<uint8_t>(0x00669158 + 4, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Event", "BA_ITEM_REWARD_GJ_W_AMOUNT", 7);
+		printf(" - EVENT_BA_ITEM_REWARD_GJ_W_AMOUNT (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x00669158 + 4, newValue);
+	}
+	if (ReadMemoryValue<uint8_t>(0x00669173 + 4, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Event", "BA_ITEM_REWARD_GJ_L_AMOUNT", 2);
+		printf(" - EVENT_BA_ITEM_REWARD_GJ_L_AMOUNT (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x00669173 + 4, newValue);
+	}
+	if (ReadMemoryValue<uint8_t>(0x0066915F + 4, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Event", "BA_ITEM_REWARD_PR_W_AMOUNT", 7);
+		printf(" - EVENT_BA_ITEM_REWARD_PR_W_AMOUNT (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x0066915F + 4, newValue);
+	}
+	if (ReadMemoryValue<uint8_t>(0x0066917A + 4, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Event", "BA_ITEM_REWARD_PR_L_AMOUNT", 2);
+		printf(" - EVENT_BA_ITEM_REWARD_PR_L_AMOUNT (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x0066917A + 4, newValue);
 	}
 
 	// Fixes
@@ -245,7 +314,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 {
 	std::cout << " * Waiting 1min before start fetching..." << std::endl;
 	Sleep(60000);
-	std::cout << " * Fetching started" << std::endl;
+	std::cout << " * Fetching started!" << std::endl;
 	m_IsDatabaseFetchThreadRunning = true;
 
 	// Try to create table used to fetch
