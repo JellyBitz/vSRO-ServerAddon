@@ -18,13 +18,13 @@
     <ClInclude Include="AppManager.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\SimpleIni.h">
-      <Filter>Archivos de encabezado</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\Memory.h">
-      <Filter>Archivos de encabezado</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\IO\SimpleIni.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Memory\Process.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>

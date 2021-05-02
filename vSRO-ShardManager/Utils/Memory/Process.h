@@ -3,12 +3,6 @@
 #include <algorithm>
 #include <string>
 
-template<typename T>
-static auto call_virtual(void* base_ptr, unsigned index) -> T
-{
-	return (*static_cast<T**>(base_ptr))[index];
-}
-
 // Writes bytes to a process
 static BOOL WriteProcessBytes(HANDLE hProcess, DWORD destAddress, LPVOID patch, DWORD numBytes)
 {
@@ -67,22 +61,14 @@ static BOOL ReadProcessBytes(HANDLE hProcess, DWORD destAddress, LPVOID buffer, 
 	return status;
 }
 
-// Converts an object to byte array extracting it from memory
-template<typename T>
-static BYTE* ToByteArray(T Object)
-{
-	static BYTE bytes[sizeof(T)];
-	std::copy(static_cast<const BYTE*>(static_cast<const void*>(&Object)),
-		static_cast<const BYTE*>(static_cast<const void*>(&Object)) + sizeof(Object),
-		bytes);
-	return bytes;
-}
-
 // Writes an object value to the address specified
 template<typename T>
 static BOOL WriteMemoryValue(DWORD DestAddress, T Value)
 {
-	auto bytes = ToByteArray<T>(Value);
+	// Converts the object to a byte array extracting it from memory
+	BYTE bytes[sizeof(T)];
+	std::copy(static_cast<const BYTE*>(static_cast<const void*>(&Value)), static_cast<const BYTE*>(static_cast<const void*>(&Value)) + sizeof(Value), bytes);
+	// Just overwrite the bytes to memory
 	return WriteProcessBytes(GetCurrentProcess(), DestAddress, bytes, sizeof(T));
 }
 

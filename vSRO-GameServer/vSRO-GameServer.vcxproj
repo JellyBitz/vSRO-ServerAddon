@@ -44,13 +44,14 @@
     <ClInclude Include="Silkroad\Navigation\CPosition.h" />
     <ClInclude Include="Database\SQLCommand.h" />
     <ClInclude Include="Database\SQLConnection.h" />
-    <ClInclude Include="Utils\Memory.h" />
     <ClInclude Include="Silkroad\Object\CGObj.h" />
     <ClInclude Include="Silkroad\Object\CGObjMobile.h" />
     <ClInclude Include="Silkroad\Object\CGObjChar.h" />
     <ClInclude Include="Silkroad\CGObjManager.h" />
     <ClInclude Include="Silkroad\Object\CGObjPC.h" />
-    <ClInclude Include="Utils\SimpleIni.h" />
+    <ClInclude Include="Utils\IO\SimpleIni.h" />
+    <ClInclude Include="Utils\Memory\hook.h" />
+    <ClInclude Include="Utils\Memory\Process.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="vSRO-GameServer.rc" />

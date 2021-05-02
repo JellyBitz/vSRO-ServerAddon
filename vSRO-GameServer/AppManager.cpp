@@ -10,8 +10,8 @@
 // Gameserver stuffs
 #include "Silkroad/CGObjManager.h"
 // Utils
-#include "Utils/Memory.h"
-#include "Utils/SimpleIni.h"
+#include "Utils/Memory/Process.h"
+#include "Utils/IO/SimpleIni.h"
 #pragma warning(disable:4244) // Bitwise operations warnings
 
 /// Static stuffs
