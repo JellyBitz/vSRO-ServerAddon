@@ -65,7 +65,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Event", "BA_ITEM_REWARD_PR_L_AMOUNT", 2, "; Amount to obtain loosing");
 		ini.SetLongValue("Fix", "AGENT_SERVER_CAPACITY", 1000, "; Set capacity supported by the connected agent server");
 		ini.SetBoolValue("Fix", "HIGH_RATES_CONFIG", true, "; Fix rates (ExpRatio/1000) to use higher values than 2500");
-		ini.SetBoolValue("Fix", "UNIQUE_LOGS", true, "; Log uniques killed into _AddLogChar on @EventID = 33");
+		ini.SetBoolValue("Fix", "UNIQUE_LOGS", true, "; Log unique spawn/killed into _AddLogChar as EventID = 32/33");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -95,42 +95,57 @@ void AppManager::InitHooks()
 	CSimpleIniA ini;
 	ini.LoadFile("vSRO-GameServer.ini");
 
-	// Create connection string
-	std::wstringstream connString;
-	connString << "DRIVER={SQL Server};";
-	connString << "SERVER=" << ini.GetValue("Sql", "HOST", "localhost") << ", " << ini.GetValue("Sql", "PORT", "1433") << ";";
-	connString << "DATABASE=" << ini.GetValue("Sql", "DB_LOG", "SRO_VT_LOG") << ";";
-	connString << "UID=" << ini.GetValue("Sql", "USER", "sa") << ";";
-	connString << "PWD=" << ini.GetValue("Sql", "PASS", "12341") << ";";
-
-	std::cout << " - Initializing database connection to log uniques..." << std::endl;
-
-	if (m_dbUniqueLog.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbUniqueLog.sqlCmd.Open(m_dbUniqueLog.sqlConn))
+	// Uniques
+	if (ini.GetBoolValue("Fix","UNIQUE_LOGS",true))
 	{
-		std::cout << " -- Connection established!" << std::endl;
-		// Apply hooks
-		std::cout << " - Applying hooks..." << std::endl;
-		if (replaceOffset(0x00414BA9, addr_from_this(&AppManager::OnUniqueKilledMsg)))
+		// Create connection string
+		std::wstringstream connString;
+		connString << "DRIVER={SQL Server};";
+		connString << "SERVER=" << ini.GetValue("Sql", "HOST", "localhost") << ", " << ini.GetValue("Sql", "PORT", "1433") << ";";
+		connString << "DATABASE=" << ini.GetValue("Sql", "DB_LOG", "SRO_VT_LOG") << ";";
+		connString << "UID=" << ini.GetValue("Sql", "USER", "sa") << ";";
+		connString << "PWD=" << ini.GetValue("Sql", "PASS", "12341") << ";";
+
+		if (m_dbUniqueLog.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbUniqueLog.sqlCmd.Open(m_dbUniqueLog.sqlConn))
 		{
-			std::cout << " -- OnUniqueKilledMsg" << std::endl;
+			if (replaceOffset(0x00414DB0, addr_from_this(&AppManager::OnUniqueSpawnMsg)))
+			{
+				std::cout << " - OnUniqueSpawnMsg" << std::endl;
+			}
+			if (replaceOffset(0x00414BA9, addr_from_this(&AppManager::OnUniqueKilledMsg)))
+			{
+				std::cout << " - OnUniqueKilledMsg" << std::endl;
+			}
 		}
 	}
 }
-void AppManager::OnUniqueKilledMsg(uint32_t unk01, const char* Message, const char* UniqueCodeName, const char* CharName)
+void AppManager::OnUniqueSpawnMsg(uint32_t LogType, const char* Message, const char* UniqueCodeName, uint16_t RegionId, uint32_t unk01, uint32_t unk02)
 {
-	auto player = CGObjManager::GetObjPCByCharName16(CharName);
-	auto pos = player->GetPosition();
 	// Build query
 	std::wstringstream qExecLog;
 	qExecLog << "EXEC dbo._AddLogChar";
-	qExecLog << " " << player->GetCharID() << ",33," << pos.RegionId << "," << pos.UnkUShort01 << ",'" << (int)pos.PosX << "," << (int)pos.PosZ << "','" << UniqueCodeName << "'";
+	qExecLog << " 0,32," << RegionId << ",0,'','" << UniqueCodeName << "'";
 
 	// Try execute it
 	m_dbUniqueLog.sqlCmd.ExecuteQuery((SQLWCHAR*)qExecLog.str().c_str());
 	m_dbUniqueLog.sqlCmd.Clear();
 
 	// Avoid call original function since it's about printing into gameserver logs
-	//reinterpret_cast<void(__thiscall*)(uint32_t, const char*, const char*, const char*)>(0x00936640)(unk01, Message, UniqueCodeName, CharName);
+}
+void AppManager::OnUniqueKilledMsg(uint32_t LogType, const char* Message, const char* UniqueCodeName, const char* CharName)
+{
+	auto player = CGObjManager::GetObjPCByCharName16(CharName);
+	auto pos = player->GetPosition();
+	// Build query
+	std::wstringstream qExecLog;
+	qExecLog << "EXEC dbo._AddLogChar";
+	qExecLog << " " << player->GetCharID() << ",33," << pos.RegionId << "," << pos.UnkUShort01 << ",'" << (int)pos.PosX << "," << (int)pos.PosY << "," << (int)pos.PosZ << "','" << UniqueCodeName << "'";
+
+	// Try execute it
+	m_dbUniqueLog.sqlCmd.ExecuteQuery((SQLWCHAR*)qExecLog.str().c_str());
+	m_dbUniqueLog.sqlCmd.Clear();
+
+	// Avoid call original function since it's about printing into gameserver logs
 }
 void AppManager::InitPatchValues()
 {
@@ -319,7 +334,7 @@ void AppManager::InitDatabaseFetch()
 		return;
 	}
 
-	std::cout << " * Initializing process to execute actions..." << std::endl;
+	std::cout << " * Initializing database fetch to execute actions..." << std::endl;
 
 	// Load file
 	CSimpleIniA ini;
@@ -333,13 +348,9 @@ void AppManager::InitDatabaseFetch()
 	connString << "UID=" << ini.GetValue("Sql", "USER", "sa") << ";";
 	connString << "PWD=" << ini.GetValue("Sql", "PASS", "12341") << ";";
 
-	std::cout << " - Initializing database connection to fetch..." << std::endl;
-
 	if (m_dbLink.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbLink.sqlCmd.Open(m_dbLink.sqlConn)
 		&& m_dbLinkHelper.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbLinkHelper.sqlCmd.Open(m_dbLinkHelper.sqlConn))
 	{
-		std::cout << " -- Connected established!" << std::endl;
-
 		auto hThread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)AppManager::DatabaseFetchThread, 0, 0, 0);
 		//// Set thread as background process (below normal)
 		//SetThreadPriority(hThread, -1);
@@ -347,7 +358,7 @@ void AppManager::InitDatabaseFetch()
 }
 DWORD WINAPI AppManager::DatabaseFetchThread()
 {
-	std::cout << " * Waiting 1min before start fetching..." << std::endl;
+	std::cout << " - Waiting 1min before start fetching..." << std::endl;
 	Sleep(60000);
 	std::cout << " - Fetching started!" << std::endl;
 	m_IsRunningDatabaseFetch = true;

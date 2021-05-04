@@ -43,8 +43,10 @@ private: // Private Helpers
 	static void InitPatchValues();
 	// Initialize all hooks required
 	static void InitHooks();
+	// Event handler for unique spawn
+	static void OnUniqueSpawnMsg(uint32_t LogType, const char* Message, const char* UniqueCodeName, uint16_t RegionId, uint32_t unk01, uint32_t unk02);
 	// Event handler for players killing uniques
-	static void OnUniqueKilledMsg(uint32_t unk01, const char* Message, const char* UniqueCodeName, const char* CharName);
+	static void OnUniqueKilledMsg(uint32_t LogType, const char* Message, const char* UniqueCodeName, const char* CharName);
 	// Starts to fetch database info
 	static void InitDatabaseFetch();
 	// Fetch database and execute the required actions
