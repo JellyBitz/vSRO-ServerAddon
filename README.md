@@ -223,7 +223,7 @@ INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 )
 VALUES
 (
-	10,
+	11,
 	'',
 	1947, -- tiger
 	1, -- Default Map
