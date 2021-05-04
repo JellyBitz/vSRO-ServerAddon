@@ -4,8 +4,17 @@
 SQLCommand::SQLCommand() { }
 SQLCommand::~SQLCommand() { }
 
+bool SQLCommand::IsOpen()
+{
+	return m_IsOpen;
+}
+
 bool SQLCommand::Open(SQLConnection Connection)
 {
+	// Try to clear data
+	Clear();
+	m_IsOpen = false;
+
 	SQLRETURN result;
 	result = SQLAllocHandle(SQL_HANDLE_STMT, SQLConnection::GetConnectionHandle(Connection), &m_StmtHandle);
 	if (result != SQL_SUCCESS)
@@ -13,6 +22,7 @@ bool SQLCommand::Open(SQLConnection Connection)
 		SQLConnection::ShowError(SQL_HANDLE_STMT,m_StmtHandle,result);
 		return false;
 	}
+	m_IsOpen = true;
 	return true;
 }
 bool SQLCommand::ExecuteQuery(SQLWCHAR* CommandText)
@@ -44,8 +54,4 @@ bool SQLCommand::GetData(SQLUSMALLINT ColumnNumber, SQLSMALLINT TargetType, SQLP
 		return false;
 	}
 	return true;
-}
-bool SQLCommand::Close()
-{
-	SQLFreeStmt(m_StmtHandle, SQL_CLOSE);
 }

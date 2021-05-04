@@ -19,10 +19,10 @@ void placeHook(int trampoline_location, T& target_location)
 	placeHook(trampoline_location, reinterpret_cast<int>(&target_location));
 }
 
-static void placeHook(int trampoline_location, int target_location)
+static bool placeHook(int trampoline_location, int target_location)
 {
 
-	char jmp_inst[] = { 0xE9, 0x00, 0x00, 0x00, 0x00 };
+	char jmp_inst[] = { (char)0xE9, 0x00, 0x00, 0x00, 0x00 };
 	int distance;
 	DWORD dwProtect = 0;
 
@@ -33,16 +33,16 @@ static void placeHook(int trampoline_location, int target_location)
 
 	if (!VirtualProtect((LPVOID)trampoline_location, sizeof(jmp_inst), PAGE_EXECUTE_READWRITE, &dwProtect)) {
 		perror("Failed to unprotect memory\n");
-		return;
+		return false;
 	}
 
 	memcpy((LPVOID)trampoline_location, jmp_inst, sizeof(jmp_inst));
 
 	VirtualProtect((LPVOID)trampoline_location, sizeof(jmp_inst), dwProtect, NULL);
-
+	return true;
 }
 
-static void replaceOffset(int trampoline_location, int target_location)
+static bool replaceOffset(int trampoline_location, int target_location)
 {
 
 	char inst_offset[] = { 0x00, 0x00, 0x00, 0x00 };
@@ -58,13 +58,13 @@ static void replaceOffset(int trampoline_location, int target_location)
 
 	if (!VirtualProtect((LPVOID)offset_location, sizeof(inst_offset), PAGE_EXECUTE_READWRITE, &dwProtect)) {
 		perror("Failed to unprotect memory\n");
-		return;
+		return false;
 	}
 
 	memcpy((LPVOID)offset_location, inst_offset, sizeof(inst_offset));
 
 	VirtualProtect((LPVOID)offset_location, sizeof(inst_offset), dwProtect, NULL);
-
+	return true;
 }
 
 static void replaceAddr(int addr, int value)

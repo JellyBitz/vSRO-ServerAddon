@@ -1,14 +1,23 @@
 #pragma once
 #include "CGObjChar.h"
 #include "../Navigation/CPosition.h"
+#include "CInstancePC.h"
 
 // Game object for a player character
 class CGObjPC : public CGObjChar
 {
 private: /// Private Members
-	char pad_0x4[128];
-	// Map position
+	uint32_t m_UniqueID;
+	char pad_0x8[44];
+	CInstancePC* m_CInstancePC;
+	char pad_0x38[76];
 	CPosition m_Position;
+public: /// Public Properties
+	uint32_t GetUniqueID();
+	// Gets the CharId from database
+	uint32_t GetCharID();
+	// Gets the current position
+	CPosition GetPosition();
 public: /// Public Methods
 	// Add item to inventory. Return error code
 	uint16_t AddItem(const char* Codename, int32_t Count, bool RandomizeStats, int8_t OptLevel);

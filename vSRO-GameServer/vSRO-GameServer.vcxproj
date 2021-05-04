@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppManager.h" />
+    <ClInclude Include="Silkroad\Object\CInstancePC.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Silkroad\CRegionManagerBody.h" />
     <ClInclude Include="Silkroad\Navigation\NavInfo.h" />

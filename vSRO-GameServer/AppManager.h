@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include "Database/SQLConnection.h"
 #include "Database/SQLCommand.h"
+#include <cstdint>
 
 // All states fetching can generate
 enum FETCH_ACTION_STATE {
@@ -27,27 +28,25 @@ private: // Private members
 	// Check if app has been initialized
 	static bool m_IsInitialized;
 	// Handlers for SQL communication
-	static DatabaseLink m_dbLink, m_dbLinkHelper;
-	// Check if fetch has been started
-	static bool m_IsDatabaseFetchStarted;
-	// Check if thread is alive
-	static bool m_IsDatabaseFetchThreadRunning;
+	static DatabaseLink m_dbLink, m_dbLinkHelper, m_dbUniqueLog;
+	// Flag to keep thread safe
+	static bool m_IsRunningDatabaseFetch;
 public: // Public Methods
 	// Initialize manager
 	static void Initialize();
 private: // Private Helpers
-	// Starts console if required
-	static void InitDebugConsole();
 	// Initialize the default config file if doesn't exists
 	static void InitConfigFile();
-	// Initialize all hooks required
-	static void InitHooks();
+	// Starts console if required
+	static void InitDebugConsole();
 	// Set all offsets values
 	static void InitPatchValues();
-	// Initialize the database communication
-	static bool InitSQLConnection();
+	// Initialize all hooks required
+	static void InitHooks();
+	// Event handler for players killing uniques
+	static void OnUniqueKilledMsg(uint32_t unk01, const char* Message, const char* UniqueCodeName, const char* CharName);
 	// Starts to fetch database info
-	static void StartDatabaseFetch();
+	static void InitDatabaseFetch();
 	// Fetch database and execute the required actions
 	static DWORD WINAPI DatabaseFetchThread();
 };

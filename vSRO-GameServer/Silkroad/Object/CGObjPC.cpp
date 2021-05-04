@@ -1,6 +1,19 @@
 #include "CGObjPC.h"
 #include "../../Utils/Memory/hook.h"
 
+/* Public Properties */
+uint32_t CGObjPC::GetUniqueID()
+{
+	return m_UniqueID;
+}
+uint32_t CGObjPC::GetCharID()
+{
+	return m_CInstancePC->CharID;
+}
+CPosition CGObjPC::GetPosition()
+{
+	return m_Position;
+}
 /* Public Methods */
 uint16_t CGObjPC::AddItem(const char* Codename, int32_t Amount, bool RandomizeStats, int8_t OptLevel)
 {
