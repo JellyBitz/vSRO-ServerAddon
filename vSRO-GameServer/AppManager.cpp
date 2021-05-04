@@ -10,15 +10,15 @@
 // Gameserver stuffs
 #include "Silkroad/CGObjManager.h"
 // Utils
-#include "Utils/Memory.h"
-#include "Utils/SimpleIni.h"
+#include "Utils/IO/SimpleIni.h"
+#include "Utils/Memory/Process.h"
+#include "Utils/Memory/hook.h"
 #pragma warning(disable:4244) // Bitwise operations warnings
 
 /// Static stuffs
 bool AppManager::m_IsInitialized;
-DatabaseLink AppManager::m_dbLink, AppManager::m_dbLinkHelper;
-bool AppManager::m_IsDatabaseFetchStarted;
-bool AppManager::m_IsDatabaseFetchThreadRunning;
+DatabaseLink AppManager::m_dbLink, AppManager::m_dbLinkHelper, AppManager::m_dbUniqueLog;
+bool AppManager::m_IsRunningDatabaseFetch;
 
 void AppManager::Initialize()
 {
@@ -29,8 +29,7 @@ void AppManager::Initialize()
 		InitDebugConsole();
 		InitPatchValues();
 		InitHooks();
-		if (InitSQLConnection())
-			StartDatabaseFetch();
+		InitDatabaseFetch();
 	}
 }
 void AppManager::InitConfigFile()
@@ -46,6 +45,7 @@ void AppManager::InitConfigFile()
 		ini.SetValue("Sql", "USER", "sa", "; Username credential");
 		ini.SetValue("Sql", "PASS", "12341", "; Password credential");
 		ini.SetValue("Sql", "DB_SHARD", "SRO_VT_SHARD", "; Name used for the specified silkroad database");
+		ini.SetValue("Sql", "DB_LOG", "SRO_VT_LOG", "; Name used for the specified silkroad database");
 		// Memory
 		ini.SetLongValue("Server", "LEVEL_MAX", 110, "; Maximum level that can be reached on server");
 		ini.SetLongValue("Server", "STALL_PRICE_LIMIT", 9999999999, "; Maximum price that can be stalled");
@@ -65,6 +65,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Event", "BA_ITEM_REWARD_PR_L_AMOUNT", 2, "; Amount to obtain loosing");
 		ini.SetLongValue("Fix", "AGENT_SERVER_CAPACITY", 1000, "; Set capacity supported by the connected agent server");
 		ini.SetBoolValue("Fix", "HIGH_RATES_CONFIG", true, "; Fix rates (ExpRatio/1000) to use higher values than 2500");
+		ini.SetBoolValue("Fix", "UNIQUE_LOGS", true, "; Log unique spawn/killed into _AddLogChar as EventID = 32/33");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -88,7 +89,63 @@ void AppManager::InitDebugConsole()
 }
 void AppManager::InitHooks()
 {
+	std::cout << " * Initializing hooks..." << std::endl;
 
+	// Load file
+	CSimpleIniA ini;
+	ini.LoadFile("vSRO-GameServer.ini");
+
+	// Uniques
+	if (ini.GetBoolValue("Fix","UNIQUE_LOGS",true))
+	{
+		// Create connection string
+		std::wstringstream connString;
+		connString << "DRIVER={SQL Server};";
+		connString << "SERVER=" << ini.GetValue("Sql", "HOST", "localhost") << ", " << ini.GetValue("Sql", "PORT", "1433") << ";";
+		connString << "DATABASE=" << ini.GetValue("Sql", "DB_LOG", "SRO_VT_LOG") << ";";
+		connString << "UID=" << ini.GetValue("Sql", "USER", "sa") << ";";
+		connString << "PWD=" << ini.GetValue("Sql", "PASS", "12341") << ";";
+
+		if (m_dbUniqueLog.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbUniqueLog.sqlCmd.Open(m_dbUniqueLog.sqlConn))
+		{
+			if (replaceOffset(0x00414DB0, addr_from_this(&AppManager::OnUniqueSpawnMsg)))
+			{
+				std::cout << " - OnUniqueSpawnMsg" << std::endl;
+			}
+			if (replaceOffset(0x00414BA9, addr_from_this(&AppManager::OnUniqueKilledMsg)))
+			{
+				std::cout << " - OnUniqueKilledMsg" << std::endl;
+			}
+		}
+	}
+}
+void AppManager::OnUniqueSpawnMsg(uint32_t LogType, const char* Message, const char* UniqueCodeName, uint16_t RegionId, uint32_t unk01, uint32_t unk02)
+{
+	// Build query
+	std::wstringstream qExecLog;
+	qExecLog << "EXEC dbo._AddLogChar";
+	qExecLog << " 0,32," << RegionId << ",0,'','" << UniqueCodeName << "'";
+
+	// Try execute it
+	m_dbUniqueLog.sqlCmd.ExecuteQuery((SQLWCHAR*)qExecLog.str().c_str());
+	m_dbUniqueLog.sqlCmd.Clear();
+
+	// Avoid call original function since it's about printing into gameserver logs
+}
+void AppManager::OnUniqueKilledMsg(uint32_t LogType, const char* Message, const char* UniqueCodeName, const char* CharName)
+{
+	auto player = CGObjManager::GetObjPCByCharName16(CharName);
+	auto pos = player->GetPosition();
+	// Build query
+	std::wstringstream qExecLog;
+	qExecLog << "EXEC dbo._AddLogChar";
+	qExecLog << " " << player->GetCharID() << ",33," << pos.RegionId << "," << pos.UnkUShort01 << ",'" << (int)pos.PosX << "," << (int)pos.PosY << "," << (int)pos.PosZ << "','" << UniqueCodeName << "'";
+
+	// Try execute it
+	m_dbUniqueLog.sqlCmd.ExecuteQuery((SQLWCHAR*)qExecLog.str().c_str());
+	m_dbUniqueLog.sqlCmd.Clear();
+
+	// Avoid call original function since it's about printing into gameserver logs
 }
 void AppManager::InitPatchValues()
 {
@@ -267,17 +324,17 @@ void AppManager::InitPatchValues()
 		WriteMemoryValue<uint8_t>(0x00427349 + 2, 0x42); // DropGoldAmountCoef
 	}
 }
-bool AppManager::InitSQLConnection()
+void AppManager::InitDatabaseFetch()
 {
-	// Check if the app has been started before
-	CreateMutexA(0, FALSE, "Github.com/JellyBitz/vSRO-ServerAddon");
+	// Check if this DLL is running into another gameserver process
+	CreateMutexA(0, FALSE, "JellyBitz/vSRO-GameServer");
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
-		// Avoid create connection
-		return false;
+		// Avoid create fetch connection
+		return;
 	}
 
-	std::cout << " * Initializing database connection..." << std::endl;
+	std::cout << " * Initializing database fetch to execute actions..." << std::endl;
 
 	// Load file
 	CSimpleIniA ini;
@@ -291,20 +348,9 @@ bool AppManager::InitSQLConnection()
 	connString << "UID=" << ini.GetValue("Sql", "USER", "sa") << ";";
 	connString << "PWD=" << ini.GetValue("Sql", "PASS", "12341") << ";";
 
-	// Try to open the database connections
 	if (m_dbLink.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbLink.sqlCmd.Open(m_dbLink.sqlConn)
 		&& m_dbLinkHelper.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbLinkHelper.sqlCmd.Open(m_dbLinkHelper.sqlConn))
 	{
-		return true;
-	}
-	return false;
-}
-void AppManager::StartDatabaseFetch()
-{
-	if (!m_IsDatabaseFetchStarted && !m_IsDatabaseFetchThreadRunning)
-	{
-		// Start new thread fetching
-		m_IsDatabaseFetchStarted = true;
 		auto hThread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)AppManager::DatabaseFetchThread, 0, 0, 0);
 		//// Set thread as background process (below normal)
 		//SetThreadPriority(hThread, -1);
@@ -312,10 +358,10 @@ void AppManager::StartDatabaseFetch()
 }
 DWORD WINAPI AppManager::DatabaseFetchThread()
 {
-	std::cout << " * Waiting 1min before start fetching..." << std::endl;
+	std::cout << " - Waiting 1min before start fetching..." << std::endl;
 	Sleep(60000);
-	std::cout << " * Fetching started!" << std::endl;
-	m_IsDatabaseFetchThreadRunning = true;
+	std::cout << " - Fetching started!" << std::endl;
+	m_IsRunningDatabaseFetch = true;
 
 	// Try to create table used to fetch
 	std::wstringstream qCreateTable;
@@ -338,14 +384,14 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 
 	// Try execute query
 	if (!m_dbLink.sqlCmd.ExecuteQuery((SQLWCHAR*)qCreateTable.str().c_str())) {
-		m_IsDatabaseFetchThreadRunning = false;
+		m_IsRunningDatabaseFetch = false;
 		return 0;
 	}
 	m_dbLink.sqlCmd.Clear();
 
 	// Stops this thread loop on interruption/exit
 	signal(SIGINT, [](int) {
-		m_IsDatabaseFetchStarted = false;
+		m_IsRunningDatabaseFetch = false;
 	});
 
 	// Start fetching actions without result
@@ -353,7 +399,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 	qSelectActions << "SELECT ID, Action_ID, CharName16, Param01, Param02, Param03, Param04, Param05, Param06, Param07, Param08";
 	qSelectActions << " FROM dbo._ExeGameServer";
 	qSelectActions << " WHERE Action_Result = " << FETCH_ACTION_STATE::UNKNOWN;
-	while (m_IsDatabaseFetchStarted)
+	while (m_IsRunningDatabaseFetch)
 	{
 		// Try to execute query
 		if (!m_dbLink.sqlCmd.ExecuteQuery((SQLWCHAR*)qSelectActions.str().c_str()))
@@ -598,20 +644,20 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 					CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 					if (player)
 					{
-						std::cout << "CGObjPC ptr: " << player << std::endl;
+						std::cout << " - CGObjPC ptr: " << player << std::endl;
 					}
 					else
 						actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 				} break;
 				default:
-					std::cout << " * Error on Action_ID (" << cActionID << ") : Undefined" << std::endl;
+					std::cout << " Error on Action_ID (" << cActionID << ") : Undefined" << std::endl;
 					actionResult = FETCH_ACTION_STATE::ACTION_UNDEFINED;
 					break;
 				}
 			}
 			catch (std::exception& ex)
 			{
-				std::cout << " * Exception on Action_ID (" << cActionID << ") : " << ex.what() << std::endl;
+				std::cout << " Exception on Action_ID (" << cActionID << ") : " << ex.what() << std::endl;
 				actionResult = FETCH_ACTION_STATE::UNNEXPECTED_EXCEPTION;
 			}
 
@@ -633,10 +679,9 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 	m_dbLinkHelper.sqlConn.Close();
 	m_dbLink.sqlConn.Close();
 
-	// Stop flags
-	m_IsDatabaseFetchThreadRunning = false;
-	m_IsDatabaseFetchStarted = false;
-	std::cout << " * Fetching finished" << std::endl;
+	// Stop flag
+	m_IsRunningDatabaseFetch = false;
+	std::cout << " - Fetching stopped!" << std::endl;
 
 	return 0;
 }

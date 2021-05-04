@@ -4,8 +4,9 @@
 #include <Windows.h>
 #include <iostream>
 // Utils
-#include "Utils/Memory.h"
-#include "Utils/SimpleIni.h"
+#include "Utils/Memory/Process.h"
+#include "Utils/IO/SimpleIni.h"
+#pragma warning(disable:4244) // Bitwise operations warnings
 
 /// Static stuffs
 bool AppManager::m_IsInitialized;

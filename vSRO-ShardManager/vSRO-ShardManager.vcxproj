@@ -154,8 +154,8 @@
   <ItemGroup>
     <ClInclude Include="AppManager.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Utils\Memory.h" />
-    <ClInclude Include="Utils\SimpleIni.h" />
+    <ClInclude Include="Utils\IO\SimpleIni.h" />
+    <ClInclude Include="Utils\Memory\Process.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppManager.cpp" />

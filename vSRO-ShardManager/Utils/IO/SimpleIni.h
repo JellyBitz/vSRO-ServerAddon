@@ -882,10 +882,10 @@ public:
         @return a_nDefault      Key was not found in the section
         @return other           Value of the key
      */
-    long GetLongValue(
+    long long GetLongValue(
         const SI_CHAR * a_pSection,
         const SI_CHAR * a_pKey,
-        long            a_nDefault     = 0,
+        long long       a_nDefault     = 0,
         bool *          a_pHasMultiple = NULL
         ) const;
 
@@ -1000,7 +1000,7 @@ public:
     SI_Error SetLongValue(
         const SI_CHAR * a_pSection,
         const SI_CHAR * a_pKey,
-        long            a_nValue,
+        long long       a_nValue,
         const SI_CHAR * a_pComment      = NULL,
         bool            a_bUseHex       = false,
         bool            a_bForceReplace = false
@@ -2028,11 +2028,11 @@ CSimpleIniTempl<SI_CHAR,SI_STRLESS,SI_CONVERTER>::GetValue(
 }
 
 template<class SI_CHAR, class SI_STRLESS, class SI_CONVERTER>
-long
+long long
 CSimpleIniTempl<SI_CHAR,SI_STRLESS,SI_CONVERTER>::GetLongValue(
     const SI_CHAR * a_pSection,
     const SI_CHAR * a_pKey,
-    long            a_nDefault,
+    long long       a_nDefault,
     bool *          a_pHasMultiple
     ) const
 {
@@ -2048,14 +2048,14 @@ CSimpleIniTempl<SI_CHAR,SI_STRLESS,SI_CONVERTER>::GetLongValue(
     }
 
     // handle the value as hex if prefaced with "0x"
-    long nValue = a_nDefault;
+    long long nValue = a_nDefault;
     char * pszSuffix = szValue;
     if (szValue[0] == '0' && (szValue[1] == 'x' || szValue[1] == 'X')) {
     	if (!szValue[2]) return a_nDefault;
-        nValue = strtol(&szValue[2], &pszSuffix, 16);
+        nValue = strtoll(&szValue[2], &pszSuffix, 16);
     }
     else {
-        nValue = strtol(szValue, &pszSuffix, 10);
+        nValue = strtoll(szValue, &pszSuffix, 10);
     }
 
     // any invalid strings will return the default value
@@ -2071,7 +2071,7 @@ SI_Error
 CSimpleIniTempl<SI_CHAR,SI_STRLESS,SI_CONVERTER>::SetLongValue(
     const SI_CHAR * a_pSection,
     const SI_CHAR * a_pKey,
-    long            a_nValue,
+    long long       a_nValue,
     const SI_CHAR * a_pComment,
     bool            a_bUseHex,
     bool            a_bForceReplace
@@ -2083,9 +2083,9 @@ CSimpleIniTempl<SI_CHAR,SI_STRLESS,SI_CONVERTER>::SetLongValue(
     // convert to an ASCII string
     char szInput[64];
 #if __STDC_WANT_SECURE_LIB__ && !_WIN32_WCE
-    sprintf_s(szInput, a_bUseHex ? "0x%lx" : "%ld", a_nValue);
+    sprintf_s(szInput, a_bUseHex ? "0x%llx" : "%lld", a_nValue);
 #else // !__STDC_WANT_SECURE_LIB__
-    sprintf(szInput, a_bUseHex ? "0x%lx" : "%ld", a_nValue);
+    sprintf(szInput, a_bUseHex ? "0x%llx" : "%lld", a_nValue);
 #endif // __STDC_WANT_SECURE_LIB__
 
     // convert to output text

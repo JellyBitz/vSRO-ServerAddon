@@ -13,6 +13,9 @@ private: /// Private Members
 	SQLHANDLE m_ConnHandle;
 	// Keeps the connection state
 	bool m_IsOpen;
+public: /// Public Properties
+	// Checks if the connection is opened
+	bool IsOpen();
 public: /// Constructor
 	SQLConnection();
 	~SQLConnection();

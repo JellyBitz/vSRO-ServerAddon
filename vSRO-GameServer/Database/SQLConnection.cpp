@@ -4,10 +4,17 @@
 SQLConnection::SQLConnection() { }
 SQLConnection::~SQLConnection() { }
 
+bool SQLConnection::IsOpen()
+{
+	return m_IsOpen;
+}
+
 bool SQLConnection::Open(SQLWCHAR* ConnectionString)
 {
-	SQLRETURN result;
+	// Try to close last connection
+	Close();
 
+	SQLRETURN result;
 	// Allocating handlers
 	result = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &m_EnvHandle);
 	if (result != SQL_SUCCESS)
@@ -37,6 +44,7 @@ bool SQLConnection::Open(SQLWCHAR* ConnectionString)
 	{
 	case SQL_SUCCESS:
 	case SQL_SUCCESS_WITH_INFO:
+		m_IsOpen = true;
 		return true;
 	}
 	ShowError(SQL_HANDLE_DBC, m_ConnHandle, result);
@@ -45,10 +53,14 @@ bool SQLConnection::Open(SQLWCHAR* ConnectionString)
 
 void SQLConnection::Close()
 {
-	// Close connection and dispose handlers
-	SQLDisconnect(m_ConnHandle);
-	SQLFreeHandle(SQL_HANDLE_DBC, m_ConnHandle);
-	SQLFreeHandle(SQL_HANDLE_ENV, m_EnvHandle);
+	if (IsOpen())
+	{
+		// Close connection and dispose handlers
+		SQLDisconnect(m_ConnHandle);
+		SQLFreeHandle(SQL_HANDLE_DBC, m_ConnHandle);
+		SQLFreeHandle(SQL_HANDLE_ENV, m_EnvHandle);
+		m_IsOpen = false;
+	}
 }
 
 void SQLConnection::ShowError(unsigned int hType, const SQLHANDLE& hHandle, SQLRETURN RetCode)
