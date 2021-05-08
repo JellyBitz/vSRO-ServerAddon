@@ -90,6 +90,9 @@ void AppManager::InitPatchValues()
 	if (ini.GetBoolValue("Fix", "PARTY_MATCH_1HOUR_DC", true))
 	{
 		printf(" - FIX_PARTY_MATCH_1HOUR_DC\r\n");
-		WriteMemoryValue<uint16_t>(0x004505D9 + 3, 0x2002);
+		// Disable/Jump timeout condition
+		WriteMemoryValue<uint16_t>(0x0045055C, 0x30EB); // jmp,+30
+		for(int i = 0; i < 3; i++)
+			WriteMemoryValue<uint8_t>(0x0045055C + 2 + i, 0x90); // nop
 	}
 }

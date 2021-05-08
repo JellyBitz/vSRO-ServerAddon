@@ -54,6 +54,8 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT", 32, "; Guild members limit");
+		ini.SetLongValue("Guild", "STORAGE_SLOTS_MIN", 30, "; Storage slots at first level");
+		ini.SetLongValue("Guild", "STORAGE_SLOTS_INCREASE", 30, "; Storage slots increased per level");
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
 		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12, "; Union chat participants allowed by guild");
 		ini.SetValue("Event","CTF_ITEM_REWARD","ITEM_ETC_E070919_TROPHY","; Item reward from Capture The Flag");
@@ -66,6 +68,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Fix", "AGENT_SERVER_CAPACITY", 1000, "; Set capacity supported by the connected agent server");
 		ini.SetBoolValue("Fix", "HIGH_RATES_CONFIG", true, "; Fix rates (ExpRatio/1000) to use higher values than 2500");
 		ini.SetBoolValue("Fix", "UNIQUE_LOGS", true, "; Log unique spawn/killed into _AddLogChar as EventID = 32/33");
+		ini.SetBoolValue("Fix", "DISABLE_GREEN_BOOK", true, "; Disable buff with the green book");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -232,6 +235,21 @@ void AppManager::InitPatchValues()
 		for (int i = 0; i < 4; i++)
 			WriteMemoryValue<uint8_t>(0x005D0FD6 + 2 + 1 + i, 0x90); // NOP
 	}
+	if (ReadMemoryValue<uint32_t>(0x00C6B5F8, uintValue))
+	{
+		uint32_t newValue = ini.GetLongValue("Guild", "STORAGE_SLOTS_MIN", 30);
+		printf(" - GUILD_STORAGE_SLOTS_MIN (%d) -> (%d)\r\n", uintValue, newValue);
+		WriteMemoryValue<uint32_t>(0x00C6B5F8, newValue);
+		// Get value increased on second level
+		uint32_t increaseValue;
+		if (ReadMemoryValue<uint32_t>(0x00C6B5F8 + 4, increaseValue))
+		{
+			uint32_t increaseNewValue = ini.GetLongValue("Guild", "STORAGE_SLOTS_INCREASE", 30);
+			printf(" - GUILD_STORAGE_SLOTS_INCREASE (%d) -> (%d)\r\n", uintValue-increaseValue, increaseNewValue);
+			for(int i = 0; i < 3; i++)
+				WriteMemoryValue<uint32_t>(0x00C6B5F8 + 4 + (i*4), newValue + (i+1)*increaseNewValue);
+		}
+	}
 	if (ReadMemoryValue<uint8_t>(0x005B8EA1 + 1, byteValue))
 	{
 		uint8_t newValue = ini.GetLongValue("Guild", "UNION_LIMIT", 8);
@@ -322,6 +340,14 @@ void AppManager::InitPatchValues()
 		WriteMemoryValue<uint8_t>(0x004271F5 + 2, 0x42); // ExpRatioParty
 		WriteMemoryValue<uint8_t>(0x004272A0 + 2, 0x42); // DropItemRatio
 		WriteMemoryValue<uint8_t>(0x00427349 + 2, 0x42); // DropGoldAmountCoef
+	}
+	if (ini.GetBoolValue("Fix", "DISABLE_GREEN_BOOK", true))
+	{
+		printf(" - FIX_DISABLE_GREEN_BOOK\r\n");
+		for(int i = 0; i < 8; i++)
+			WriteMemoryValue<uint8_t>(0x004142E2 + i, 0x90); // NOP
+		for(int i = 0; i < 5; i++)
+			WriteMemoryValue<uint8_t>(0x0041474D + i, 0x90); // NOP
 	}
 }
 void AppManager::InitDatabaseFetch()
@@ -638,6 +664,30 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 					}
 					else
 						actionResult = FETCH_ACTION_STATE::PARAMS_NOT_SUPPLIED;
+				} break;
+				case 12: // Set body mode from player
+				{
+					SQLUSMALLINT cParam02;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_USHORT, &cParam02, 0, NULL))
+					{
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->SetBodyMode(cParam02);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+				} break;
+				case 13: // Update Skill Points 
+				{
+					SQLINTEGER cParam02;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_LONG, &cParam02, 0, NULL))
+					{
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->UpdateSP(cParam02);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
 				} break;
 				case 3312: // For testing references
 				{

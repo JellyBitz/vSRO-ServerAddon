@@ -200,7 +200,7 @@ VALUES
 (
 	10,
 	'',
-	1947, -- tiger
+	1954, -- Tiger Woman
 	24744, -- Jangan (S)
 	968,
 	-27,
@@ -231,6 +231,38 @@ VALUES
 	968,
 	-27,
 	1114
+);
+```
+
+12. Set body state from player
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param02 -- Body State (0 = None, 1 = Berserk, 2 = Untouchable, 3 = GMInvincible, 4 = GMUntouchable, 5= GMInvisible, 6 = Stealth, 7 = Invisible)
+)
+VALUES
+(
+	12,
+	'JellyBitz',
+	1
+);
+```
+
+13. Updates the skill points
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param02 -- Skill points
+)
+VALUES
+(
+	13,
+	'JellyBitz',
+	1000 -- Increase 1k SP
 );
 ```
 

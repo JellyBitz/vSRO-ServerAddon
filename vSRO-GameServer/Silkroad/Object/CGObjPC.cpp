@@ -29,6 +29,14 @@ void CGObjPC::UpdateHwan(uint8_t Level)
 {
 	reinterpret_cast<void(__thiscall*)(CGObjPC*, uint8_t)>(0x004A9F40)(this, Level);
 }
+void CGObjPC::UpdateSP(int32_t Offset)
+{
+	CallVirtual<void(__thiscall*)(CGObjPC*, int32_t, int8_t)>(this, 93)(this, Offset, 1);
+}
+void CGObjPC::UpdateHPMP(int32_t Health, int32_t Mana, uint16_t DisplayEffectType)
+{
+	CallVirtual<void(__thiscall*)(CGObjPC*, int32_t, int32_t, uint16_t)>(this, 194)(this, Health, Mana, DisplayEffectType);
+}
 bool CGObjPC::MoveTo(uint16_t RegionId, float PosX, float PosY, float PosZ)
 {
 	uint32_t gwid = 0;

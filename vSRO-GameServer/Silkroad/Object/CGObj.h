@@ -9,4 +9,6 @@ protected: /// Protected Members
 public: /// Public Properties
 	// Gets the game world id as reference
 	void GetGameWorldId(uint32_t* OutGameWorldId);
+	// Set health status 
+	void SetLifeState(uint8_t State);
 };

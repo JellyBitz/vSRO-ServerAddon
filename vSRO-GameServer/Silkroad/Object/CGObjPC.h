@@ -25,6 +25,10 @@ public: /// Public Methods
 	void UpdateGold(int64_t Offset);
 	// Update hwan title by level
 	void UpdateHwan(uint8_t Level);
+	// Update the current SP Experience
+	void UpdateSP(int32_t Offset);
+	// Updates the HP and MP
+	void UpdateHPMP(int32_t Health, int32_t Mana, uint16_t DisplayEffectType);
 	// Moves the player to the map location. Return success
 	bool MoveTo(uint16_t RegionId, float PosX, float PosY, float PosZ);
 	// Moves the player to the gameworld and map location. Return success
