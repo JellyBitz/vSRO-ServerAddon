@@ -53,7 +53,11 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "PARTY_MOB_SPAWN_PROBABILITY", 50, "; % Probability for party mob spawns");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
-		ini.SetLongValue("Guild", "MEMBERS_LIMIT", 32, "; Guild members limit");
+		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL1", 15, "; Guild members capacity at level 1");
+		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL2", 20, "; Guild members capacity at level 2");
+		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL3", 25, "; Guild members capacity at level 3");
+		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL4", 35, "; Guild members capacity at level 4");
+		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL5", 50, "; Guild members capacity at level 5");
 		ini.SetLongValue("Guild", "STORAGE_SLOTS_MIN", 30, "; Storage slots at first level");
 		ini.SetLongValue("Guild", "STORAGE_SLOTS_INCREASE", 30, "; Storage slots increased per level");
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
@@ -229,11 +233,37 @@ void AppManager::InitPatchValues()
 
 	// Guild
 	{
-		uint8_t newValue = ini.GetLongValue("Guild", "MEMBERS_LIMIT", 32);
-		printf(" - GUILD_MEMBERS_LIMIT (?) -> (%d)\r\n", newValue);
-		WriteMemoryValue<uint16_t>(0x005D0FD6,0xFA83); WriteMemoryValue<uint8_t>(0x005D0FD6 + 2, newValue); // CMP edx,newValue
-		for (int i = 0; i < 4; i++)
-			WriteMemoryValue<uint8_t>(0x005D0FD6 + 2 + 1 + i, 0x90); // NOP
+		uint32_t addr = 0x00ADE8DC;
+		if (ReadMemoryValue<uint32_t>(addr, uintValue))
+		{
+			uint32_t newValue = ini.GetLongValue("Guild", "MEMBERS_LIMIT_LEVEL1", 15);
+			printf(" - GUILD_MEMBERS_LIMIT_LEVEL1 (%u) -> (%u)\r\n", uintValue, newValue);
+			WriteMemoryValue<uint32_t>(addr, newValue);
+		}
+		if (ReadMemoryValue<uint32_t>(addr + 4, uintValue))
+		{
+			uint32_t newValue = ini.GetLongValue("Guild", "MEMBERS_LIMIT_LEVEL2", 20);
+			printf(" - GUILD_MEMBERS_LIMIT_LEVEL2 (%u) -> (%u)\r\n", uintValue, newValue);
+			WriteMemoryValue<uint32_t>(addr + 4, newValue);
+		}
+		if (ReadMemoryValue<uint32_t>(addr + 8, uintValue))
+		{
+			uint32_t newValue = ini.GetLongValue("Guild", "MEMBERS_LIMIT_LEVEL3", 25);
+			printf(" - GUILD_MEMBERS_LIMIT_LEVEL3 (%u) -> (%u)\r\n", uintValue, newValue);
+			WriteMemoryValue<uint32_t>(addr + 8, newValue);
+		}
+		if (ReadMemoryValue<uint32_t>(addr + 12, uintValue))
+		{
+			uint32_t newValue = ini.GetLongValue("Guild", "MEMBERS_LIMIT_LEVEL4", 35);
+			printf(" - GUILD_MEMBERS_LIMIT_LEVEL4 (%u) -> (%u)\r\n", uintValue, newValue);
+			WriteMemoryValue<uint32_t>(addr + 12, newValue);
+		}
+		if (ReadMemoryValue<uint32_t>(addr + 16, uintValue))
+		{
+			uint32_t newValue = ini.GetLongValue("Guild", "MEMBERS_LIMIT_LEVEL5", 50);
+			printf(" - GUILD_MEMBERS_LIMIT_LEVEL5 (%u) -> (%u)\r\n", uintValue, newValue);
+			WriteMemoryValue<uint32_t>(addr + 16, newValue);
+		}
 	}
 	if (ReadMemoryValue<uint32_t>(0x00C6B5F8, uintValue))
 	{

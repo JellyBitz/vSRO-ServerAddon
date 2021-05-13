@@ -66,6 +66,16 @@ This is a compilations of ASM/editions for vSRO (1.188) that you'll need to chan
 006AA4A3 | BE F0000000              | mov esi,DC                        | European
 ```
 
+### GUILD_MEMBERS_LIMIT
+
+```hex
+00D8C438  0F 00 00 00 | Level 1 = 0x0000000F = 15
+00D8C43C  14 00 00 00 | Level 2 = 0x00000014 = 20
+00D8C440  19 00 00 00 | Level 3 = 0x00000019 = 25
+00D8C444  23 00 00 00 | Level 4 = 0x00000023 = 35
+00D8C448  32 00 00 00 | Level 5 = 0x00000032 = 50
+```
+
 ### GUILD_UNION_CHAT_PARTICIPANTS
 
 0x0C = 12
