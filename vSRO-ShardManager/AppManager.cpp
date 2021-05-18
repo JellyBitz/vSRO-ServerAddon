@@ -32,6 +32,8 @@ void AppManager::InitConfigFile()
 		// Memory
 		ini.SetLongValue("Account", "CHARACTERS_MAX", 4, "; Maximum characters per account");
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
+		ini.SetLongValue("Event", "CTF_PARTICIPANS_MIN", 8, "; Minimum participants required to start Capture The Flag");
+		ini.SetLongValue("Event", "BA_PARTICIPANS_MIN", 8, "; Minimum participants required to start Battle Arena");
 		ini.SetBoolValue("Fix", "PARTY_MATCH_1HOUR_DC", true, "; Fix disconnect when party takes more than 1 hour on party match");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
@@ -84,6 +86,20 @@ void AppManager::InitPatchValues()
 		uint8_t newValue = ini.GetLongValue("Guild", "UNION_LIMIT", 8);
 		printf(" - GUILD_UNION_LIMIT (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x00434311 + 1, newValue);
+	}
+
+	// Event
+	if (ReadMemoryValue<uint8_t>(0x00672891 + 4, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Event", "CTF_PARTICIPANS_MIN", 8);
+		printf(" - EVENT_CTF_PARTICIPANS_MIN (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x00672891 + 4, newValue);
+	}
+	if (ReadMemoryValue<uint8_t>(0x0066A1B0 + 4, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Event", "BA_PARTICIPANS_MIN", 8);
+		printf(" - EVENT_BA_PARTICIPANS_MIN (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x0066A1B0 + 4, newValue);
 	}
 
 	// Fix

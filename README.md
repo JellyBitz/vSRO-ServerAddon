@@ -266,6 +266,22 @@ VALUES
 );
 ```
 
+14. Changes the guild grantname from the player
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param01 -- GrantName
+)
+VALUES
+(
+	14,
+	'JellyBitz',
+	'Jelly'
+);
+```
+
 ### Action Result Code
 
 ```C++

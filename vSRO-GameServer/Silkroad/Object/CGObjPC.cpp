@@ -1,5 +1,6 @@
 #include "CGObjPC.h"
 #include "../../Utils/Memory/hook.h"
+#include "../../Silkroad/Text/GString.h"
 
 /* Public Properties */
 uint32_t CGObjPC::GetUniqueID()
@@ -58,6 +59,24 @@ bool CGObjPC::Reload()
 	uint32_t gwid = 0;
 	GetGameWorldId(&gwid);
 	return MoveTo(gwid, m_Position, 2);
+}
+void CGObjPC::ApplyGuildNickName(const char* Nickname)
+{
+	std::n_string* nick = new std::n_string(Nickname);
+	uint32_t charId = m_CInstancePC->CharID;
+
+	__asm
+	{
+		push nick;
+		push 0x25; // Update type
+		push this;
+
+		mov ecx, charId;
+		xor edx, edx;
+		
+		mov eax, 0x005C80A0;
+		call eax;
+	}
 }
 /* Private Helpers */
 void CGObjPC::UpdateGold(int64_t Offset, int32_t Unknown, bool Realtime, bool ShowMessage)
