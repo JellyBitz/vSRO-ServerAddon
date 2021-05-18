@@ -62,6 +62,8 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Guild", "STORAGE_SLOTS_INCREASE", 30, "; Storage slots increased per level");
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
 		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12, "; Union chat participants allowed by guild");
+		ini.SetLongValue("Academy", "GRADUATE_BEGINNER_LEVEL", 40, "; Graduation level for the beginner members");
+		ini.SetLongValue("Academy", "DISBAND_PENALTY_TIME", 604800, "; Penalty time to create again the academy group");
 		ini.SetValue("Event","CTF_ITEM_REWARD","ITEM_ETC_E070919_TROPHY","; Item reward from Capture The Flag");
 		ini.SetLongValue("Event", "CTF_ITEM_REWARD_AMOUNT", 1, "; Amount to obtain per every kill");
 		ini.SetValue("Event","BA_ITEM_REWARD","ITEM_ETC_ARENA_COIN","; Item reward from Battle Arena");
@@ -291,6 +293,22 @@ void AppManager::InitPatchValues()
 		uint8_t newValue = ini.GetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12);
 		printf(" - GUILD_UNION_CHAT_PARTICIPANTS (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x005C4B42 + 4, newValue);
+	}
+
+	// Academy
+	if (ReadMemoryValue<uint8_t>(0x00519883 + 2, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Academy", "GRADUATE_BEGINNER_LEVEL", 40);
+		printf(" - ACADEMY_GRADUATE_BEGINNER_LEVEL (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x00519883 + 2, newValue);
+		WriteMemoryValue<uint8_t>(0x005196CD + 1, newValue);
+	}
+	if (ReadMemoryValue<uint32_t>(0x005DD36A + 1, uintValue))
+	{
+		uint32_t newValue = ini.GetLongValue("Academy", "DISBAND_PENALTY_TIME", 604800);
+		printf(" - ACADEMY_DISBAND_PENALTY_TIME (%d) -> (%d)\r\n", uintValue, newValue);
+		WriteMemoryValue<uint32_t>(0x005DD36A + 1, newValue);
+		WriteMemoryValue<uint32_t>(0x00651C7A + 2, newValue);
 	}
 
 	// Event
