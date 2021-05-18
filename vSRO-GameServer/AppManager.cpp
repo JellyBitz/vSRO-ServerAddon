@@ -428,7 +428,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 	qCreateTable << " Action_ID INT NOT NULL,";
 	qCreateTable << " Action_Result SMALLINT NOT NULL DEFAULT 0,";
 	qCreateTable << " CharName16 VARCHAR(64) NOT NULL,";
-	qCreateTable << " Param01 VARCHAR(128),";
+	qCreateTable << " Param01 VARCHAR(129),";
 	qCreateTable << " Param02 BIGINT,";
 	qCreateTable << " Param03 BIGINT,";
 	qCreateTable << " Param04 BIGINT,";
@@ -715,6 +715,18 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 						if (player)
 							player->UpdateSP(cParam02);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+				} break;
+				case 14: // Change Guild NickName
+				{
+					char cParam01[13];
+					if (m_dbLink.sqlCmd.GetData(4, SQL_C_CHAR, &cParam01, 13, 0))
+					{
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->ApplyGuildNickName(cParam01);
 						else
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}

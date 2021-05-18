@@ -37,6 +37,8 @@ public: /// Public Methods
 	bool MutateItemAt(uint8_t Slot,const char* NewCodename);
 	// Moves the player to the same position to force a reloading
 	bool Reload();
+	// Set the guild member nickname
+	void ApplyGuildNickName(const char* Nickname);
 private: /// Private Helpers
 	// Update the gold amount
 	void UpdateGold(int64_t Amount, int32_t Unknown, bool Realtime, bool ShowMessage);
