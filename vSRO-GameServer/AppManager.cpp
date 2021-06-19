@@ -76,6 +76,7 @@ void AppManager::InitConfigFile()
 		ini.SetBoolValue("Fix", "HIGH_RATES_CONFIG", true, "; Fix rates (ExpRatio/1000) to use higher values than 2500");
 		ini.SetBoolValue("Fix", "UNIQUE_LOGS", true, "; Log unique spawn/killed into _AddLogChar as EventID = 32/33");
 		ini.SetBoolValue("Fix", "DISABLE_GREEN_BOOK", true, "; Disable buff with the green book");
+		ini.SetBoolValue("Fix", "DISABLE_MSGBOX_SILK_GOLD_PRICE", true, "; Disable messages about \"register silk/gold price.\"");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -393,7 +394,7 @@ void AppManager::InitPatchValues()
 	if (ini.GetBoolValue("Fix", "HIGH_RATES_CONFIG", true))
 	{
 		printf(" - FIX_HIGH_RATES_CONFIG\r\n");
-		WriteMemoryValue<uint8_t>(0x0042714C + 2, 0x42); // ExpRatio 
+		WriteMemoryValue<uint8_t>(0x0042714C + 2, 0x42); // ExpRatio
 		WriteMemoryValue<uint8_t>(0x004271F5 + 2, 0x42); // ExpRatioParty
 		WriteMemoryValue<uint8_t>(0x004272A0 + 2, 0x42); // DropItemRatio
 		WriteMemoryValue<uint8_t>(0x00427349 + 2, 0x42); // DropGoldAmountCoef
@@ -405,6 +406,12 @@ void AppManager::InitPatchValues()
 			WriteMemoryValue<uint8_t>(0x004142E2 + i, 0x90); // NOP
 		for(int i = 0; i < 5; i++)
 			WriteMemoryValue<uint8_t>(0x0041474D + i, 0x90); // NOP
+	}
+	if (ini.GetBoolValue("Fix", "DISABLE_MSGBOX_SILK_GOLD_PRICE", true))
+	{
+		printf(" - FIX_DISABLE_MSGBOX_SILK_GOLD_PRICE\r\n");
+		WriteMemoryValue<uint8_t>(0x006A989E, 0xEB); // jne to jmp
+		WriteMemoryValue<uint8_t>(0x006A98CB, 0xEB); // jne to jmp
 	}
 }
 void AppManager::InitDatabaseFetch()
