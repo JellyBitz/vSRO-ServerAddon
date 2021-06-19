@@ -51,6 +51,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "STALL_PRICE_LIMIT", 9999999999, "; Maximum price that can be stalled");
 		ini.SetLongValue("Server", "PARTY_MOB_MEMBERS_REQUIRED", 2, "; Party members required to find monsters party type");
 		ini.SetLongValue("Server", "PARTY_MOB_SPAWN_PROBABILITY", 50, "; % Probability for party mob spawns");
+		ini.SetLongValue("Server", "PENALTY_DROP_PROBABILITY", 5, "; % Probability to drop an item when a player dies");
 		ini.SetLongValue("Server", "PK_LEVEL_REQUIRED", 20, "; Level required to kill other player");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
@@ -224,6 +225,12 @@ void AppManager::InitPatchValues()
 		uint8_t newValue = ini.GetLongValue("Server", "PK_LEVEL_REQUIRED", 20);
 		printf(" - SERVER_PK_LEVEL_REQUIRED (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x005295DA + 1, newValue);
+	}
+	if (ReadMemoryValue<uint8_t>(0x004E696D + 1, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Server", "PENALTY_DROP_PROBABILITY", 5);
+		printf(" - SERVER_PENALTY_DROP_PROBABILITY (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x004E696D + 1, newValue);
 	}
 
 	// Job
