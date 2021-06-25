@@ -55,7 +55,6 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "PK_LEVEL_REQUIRED", 20, "; Level required to kill other player");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
-		ini.SetLongValue("Guild", "LEAVING_PENALTY_TIME", 259200, "; Penalty time (seconds) to join again to guild group");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL1", 15, "; Guild members capacity at level 1");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL2", 20, "; Guild members capacity at level 2");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL3", 25, "; Guild members capacity at level 3");
@@ -250,14 +249,6 @@ void AppManager::InitPatchValues()
 	}
 
 	// Guild
-	if (ReadMemoryValue<uint32_t>(0x005C3F94 + 1, uintValue))
-	{
-		uint32_t newValue = ini.GetLongValue("Guild", "LEAVING_PENALTY_TIME", 259200);
-		printf(" - GUILD_LEAVING_PENALTY_TIME (%u) -> (%u)\r\n", uintValue, newValue);
-		WriteMemoryValue<uint32_t>(0x005C3F94 + 1, newValue);
-		WriteMemoryValue<uint32_t>(0x009DF194 + 1, newValue);
-		WriteMemoryValue<uint32_t>(0x005C8B3D + 1, newValue);
-	}
 	{
 		uint32_t addr = 0x00ADE8DC;
 		if (ReadMemoryValue<uint32_t>(addr, uintValue))
