@@ -114,9 +114,9 @@ void AppManager::InitHooks()
 		std::wstringstream connString;
 		connString << "DRIVER={SQL Server};";
 		connString << "SERVER=" << ini.GetValue("Sql", "HOST", "localhost") << ", " << ini.GetValue("Sql", "PORT", "1433") << ";";
-		connString << "DATABASE=" << ini.GetValue("Sql", "DB_LOG", "SRO_VT_LOG") << ";";
+		connString << "DATABASE=" << ini.GetValue("Sql", "DB_LOG", "SRO_VT_SHARDLOG") << ";";
 		connString << "UID=" << ini.GetValue("Sql", "USER", "sa") << ";";
-		connString << "PWD=" << ini.GetValue("Sql", "PASS", "12341") << ";";
+		connString << "PWD=" << ini.GetValue("Sql", "PASS", "1234") << ";";
 
 		if (m_dbUniqueLog.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbUniqueLog.sqlCmd.Open(m_dbUniqueLog.sqlConn))
 		{
