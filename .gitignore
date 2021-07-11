@@ -2,5 +2,6 @@
 .vs/
 
 # Auto generated files
+Release/*
 vSRO-GameServer/Release/*
 vSRO-ShardManager/Release/*
