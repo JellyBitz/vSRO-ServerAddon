@@ -1,6 +1,6 @@
 # vSRO-ServerAddon
 
-Customizing Server Files (v1.188) behavior through DLL injection.
+Customize Silkroad Online server files (v1.188) behavior through DLL injection.
 
 ## Features
 - Patch values from memory directly
@@ -293,6 +293,10 @@ PARAMS_NOT_SUPPLIED = 4
 CHARNAME_NOT_FOUND = 5
 FUNCTION_ERROR = 6
 ```
+
+## Client Editions
+
+In order to synchronize and visualize some server files changes on game client, a few ASM editions are required in your client. [Check it out.](https://github.com/JellyBitz/vSRO-ServerAddon/blob/dev/master/README.CLIENT.md).
 
 ---
 > ### Do you feel this project is helping you a lot ?
