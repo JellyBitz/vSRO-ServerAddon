@@ -43,9 +43,9 @@ void AppManager::InitConfigFile()
 		ini.SetValue("Sql", "HOST", "localhost", "; SQL Server address or name");
 		ini.SetValue("Sql", "PORT", "1433", "; SQL Server port");
 		ini.SetValue("Sql", "USER", "sa", "; Username credential");
-		ini.SetValue("Sql", "PASS", "12341", "; Password credential");
+		ini.SetValue("Sql", "PASS", "1234", "; Password credential");
 		ini.SetValue("Sql", "DB_SHARD", "SRO_VT_SHARD", "; Name used for the specified silkroad database");
-		ini.SetValue("Sql", "DB_LOG", "SRO_VT_LOG", "; Name used for the specified silkroad database");
+		ini.SetValue("Sql", "DB_LOG", "SRO_VT_SHARDLOG", "; Name used for the specified silkroad database");
 		// Memory
 		ini.SetLongValue("Server", "LEVEL_MAX", 110, "; Maximum level that can be reached on server");
 		ini.SetLongValue("Server", "STALL_PRICE_LIMIT", 9999999999, "; Maximum price that can be stalled");
