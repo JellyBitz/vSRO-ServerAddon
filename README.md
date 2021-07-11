@@ -296,7 +296,7 @@ FUNCTION_ERROR = 6
 
 ## Client Editions
 
-In order to synchronize and visualize some server files changes on game client, a few ASM editions are required in your client. [Check it out.](https://github.com/JellyBitz/vSRO-ServerAddon/blob/dev/master/README.CLIENT.md).
+In order to synchronize and visualize some server files changes on game client, a few ASM editions are required in your client. [Check it out.](README.CLIENT.md).
 
 ---
 > ### Do you feel this project is helping you a lot ?
