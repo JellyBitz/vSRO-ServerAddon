@@ -292,7 +292,7 @@ void AppManager::InitPatchValues()
 		if (ReadMemoryValue<uint32_t>(0x00C6B5F8 + 4, increaseValue))
 		{
 			uint32_t increaseNewValue = ini.GetLongValue("Guild", "STORAGE_SLOTS_INCREASE", 30);
-			printf(" - GUILD_STORAGE_SLOTS_INCREASE (%d) -> (%d)\r\n", uintValue-increaseValue, increaseNewValue);
+			printf(" - GUILD_STORAGE_SLOTS_INCREASE (%d) -> (%d)\r\n", increaseValue-uintValue, increaseNewValue);
 			for(int i = 0; i < 3; i++)
 				WriteMemoryValue<uint32_t>(0x00C6B5F8 + 4 + (i*4), newValue + (i+1)*increaseNewValue);
 		}
