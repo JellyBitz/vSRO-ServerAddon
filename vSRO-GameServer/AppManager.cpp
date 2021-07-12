@@ -550,7 +550,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 				{
 					// Read params
 					SQLBIGINT cParam02;
-					if (m_dbLink.sqlCmd.GetData(5, SQL_C_LONG, &cParam02, 0, NULL))
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_SBIGINT, &cParam02, 0, NULL))
 					{
 						// Check player existence
 						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
