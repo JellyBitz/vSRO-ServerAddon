@@ -66,7 +66,8 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
 		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12, "; Union chat participants allowed by guild");
 		ini.SetLongValue("Academy", "GRADUATE_BEGINNER_LEVEL", 40, "; Graduation level for the beginner members");
-		ini.SetLongValue("Academy", "DISBAND_PENALTY_TIME", 604800, "; Penalty time (seconds) to create again the academy group");
+		ini.SetLongValue("Academy", "DISBAND_PENALTY_TIME", 604800, "; Penalty time (seconds) to create again the group");
+		ini.SetLongValue("Alchemy", "WAIT_DELAY", 3, "; Waiting delay (seconds) after using magic stones");
 		ini.SetValue("Event","CTF_ITEM_REWARD","ITEM_ETC_E070919_TROPHY","; Item reward from Capture The Flag");
 		ini.SetLongValue("Event", "CTF_ITEM_REWARD_AMOUNT", 1, "; Amount to obtain per every kill");
 		ini.SetValue("Event","BA_ITEM_REWARD","ITEM_ETC_ARENA_COIN","; Item reward from Battle Arena");
@@ -332,6 +333,13 @@ void AppManager::InitPatchValues()
 		printf(" - ACADEMY_DISBAND_PENALTY_TIME (%u) -> (%u)\r\n", uintValue, newValue);
 		WriteMemoryValue<uint32_t>(0x005DD36A + 1, newValue);
 		WriteMemoryValue<uint32_t>(0x00651C7A + 2, newValue);
+	}
+	// Alchemy
+	if (ReadMemoryValue<uint8_t>(0x0052ADAA + 6, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Alchemy", "WAIT_DELAY", 3);
+		printf(" - ALCHEMY_WAIT_DELAY (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x0052ADAA + 6, newValue);
 	}
 
 	// Event
