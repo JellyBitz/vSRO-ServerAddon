@@ -78,6 +78,7 @@ void AppManager::InitConfigFile()
 		ini.SetBoolValue("Fix", "UNIQUE_LOGS", true, "; Log unique spawn/killed into _AddLogChar as EventID = 32/33");
 		ini.SetBoolValue("Fix", "DISABLE_GREEN_BOOK", true, "; Disable buff with the green book");
 		ini.SetBoolValue("Fix", "DISABLE_MSGBOX_SILK_GOLD_PRICE", true, "; Disable messages about \"register silk/gold price.\"");
+		ini.SetBoolValue("Fix", "EXCHANGE_ATTACK_CANCEL", true, "; Remove the attack cancel when the player exchanges");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -417,6 +418,12 @@ void AppManager::InitPatchValues()
 		printf(" - FIX_DISABLE_MSGBOX_SILK_GOLD_PRICE\r\n");
 		WriteMemoryValue<uint8_t>(0x006A989E, 0xEB); // jne to jmp
 		WriteMemoryValue<uint8_t>(0x006A98CB, 0xEB); // jne to jmp
+	}
+	if (ini.GetBoolValue("Fix", "EXCHANGE_ATTACK_CANCEL", true))
+	{
+		printf(" - FIX_EXCHANGE_ATTACK_CANCEL\r\n");
+		for(int i = 0; i < 2; i++)
+			WriteMemoryValue<uint8_t>(0x00515578 + i, 0x90); // NOP call
 	}
 }
 void AppManager::InitDatabaseFetch()
