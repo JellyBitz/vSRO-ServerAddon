@@ -67,7 +67,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12, "; Union chat participants allowed by guild");
 		ini.SetLongValue("Academy", "GRADUATE_BEGINNER_LEVEL", 40, "; Graduation level for the beginner members");
 		ini.SetLongValue("Academy", "DISBAND_PENALTY_TIME", 604800, "; Penalty time (seconds) to create again the group");
-		ini.SetLongValue("Alchemy", "WAIT_DELAY", 3, "; Waiting delay (seconds) after using magic stones");
+		ini.SetLongValue("Alchemy", "FUSING_DELAY", 3, "; Waiting delay (seconds) after fusing alchemy elements");
 		ini.SetValue("Event","CTF_ITEM_REWARD","ITEM_ETC_E070919_TROPHY","; Item reward from Capture The Flag");
 		ini.SetLongValue("Event", "CTF_ITEM_REWARD_AMOUNT", 1, "; Amount to obtain per every kill");
 		ini.SetValue("Event","BA_ITEM_REWARD","ITEM_ETC_ARENA_COIN","; Item reward from Battle Arena");
@@ -80,7 +80,7 @@ void AppManager::InitConfigFile()
 		ini.SetBoolValue("Fix", "UNIQUE_LOGS", true, "; Log unique spawn/killed into _AddLogChar as EventID = 32/33");
 		ini.SetBoolValue("Fix", "DISABLE_GREEN_BOOK", true, "; Disable buff with the green book");
 		ini.SetBoolValue("Fix", "DISABLE_MSGBOX_SILK_GOLD_PRICE", true, "; Disable messages about \"register silk/gold price.\"");
-		ini.SetBoolValue("Fix", "EXCHANGE_ATTACK_CANCEL", true, "; Remove the attack cancel when the player exchanges");
+		ini.SetBoolValue("Fix", "EXCHANGE_ATTACK_CANCEL", true, "; Remove attack cancel when player exchanges");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -337,14 +337,14 @@ void AppManager::InitPatchValues()
 	// Alchemy
 	if (ReadMemoryValue<uint8_t>(0x0052ADAA + 6, byteValue))
 	{
-		uint8_t newValue = ini.GetLongValue("Alchemy", "WAIT_DELAY", 3);
-		printf(" - ALCHEMY_WAIT_DELAY (%d) -> (%d)\r\n", byteValue, newValue);
+		uint8_t newValue = ini.GetLongValue("Alchemy", "FUSING_DELAY", 3);
+		printf(" - ALCHEMY_FUSING_DELAY (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x0052ADAA + 6, newValue);
 	}
 
 	// Event
 	{
-		const char* newValue = ini.GetValue("Event", "CTF_ITEM_REWARD", "");
+		const char* newValue = ini.GetValue("Event", "CTF_ITEM_REWARD", "ITEM_ETC_E070919_TROPHY");
 		auto newValueLen = strlen(newValue);
 		// Change value if it's not empty and the CodeName is shorter than 128 bytes
 		if (newValueLen != 0 && newValueLen <= 128)
@@ -366,7 +366,7 @@ void AppManager::InitPatchValues()
 		WriteMemoryValue<uint8_t>(0x00646C93 + 4, newValue);
 	}
 	{
-		const char* newValue = ini.GetValue("Event", "BA_ITEM_REWARD", "");
+		const char* newValue = ini.GetValue("Event", "BA_ITEM_REWARD", "ITEM_ETC_ARENA_COIN");
 		auto newValueLen = strlen(newValue);
 		// Change value if it's not empty and the CodeName is shorter than 128 bytes
 		if (newValueLen != 0 && newValueLen <= 128)
