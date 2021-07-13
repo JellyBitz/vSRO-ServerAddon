@@ -53,6 +53,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "PARTY_MOB_SPAWN_PROBABILITY", 50, "; % Probability for party mob spawns");
 		ini.SetLongValue("Server", "PENALTY_DROP_PROBABILITY", 5, "; % Probability to drop an item when a player dies");
 		ini.SetLongValue("Server", "PK_LEVEL_REQUIRED", 20, "; Level required to kill other player");
+		ini.SetLongValue("Server", "NPC_RETURN_DEAD_LEVEL_MAX", 20, "; Maximum level for using \"Return to last dead point\" from NPC Guide");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL1", 15, "; Guild members capacity at level 1");
@@ -65,7 +66,8 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
 		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12, "; Union chat participants allowed by guild");
 		ini.SetLongValue("Academy", "GRADUATE_BEGINNER_LEVEL", 40, "; Graduation level for the beginner members");
-		ini.SetLongValue("Academy", "DISBAND_PENALTY_TIME", 604800, "; Penalty time (seconds) to create again the academy group");
+		ini.SetLongValue("Academy", "DISBAND_PENALTY_TIME", 604800, "; Penalty time (seconds) to create again the group");
+		ini.SetLongValue("Alchemy", "FUSING_DELAY", 3, "; Waiting delay (seconds) after fusing alchemy elements");
 		ini.SetValue("Event","CTF_ITEM_REWARD","ITEM_ETC_E070919_TROPHY","; Item reward from Capture The Flag");
 		ini.SetLongValue("Event", "CTF_ITEM_REWARD_AMOUNT", 1, "; Amount to obtain per every kill");
 		ini.SetValue("Event","BA_ITEM_REWARD","ITEM_ETC_ARENA_COIN","; Item reward from Battle Arena");
@@ -78,6 +80,7 @@ void AppManager::InitConfigFile()
 		ini.SetBoolValue("Fix", "UNIQUE_LOGS", true, "; Log unique spawn/killed into _AddLogChar as EventID = 32/33");
 		ini.SetBoolValue("Fix", "DISABLE_GREEN_BOOK", true, "; Disable buff with the green book");
 		ini.SetBoolValue("Fix", "DISABLE_MSGBOX_SILK_GOLD_PRICE", true, "; Disable messages about \"register silk/gold price.\"");
+		ini.SetBoolValue("Fix", "EXCHANGE_ATTACK_CANCEL", true, "; Remove attack cancel when player exchanges");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -231,6 +234,12 @@ void AppManager::InitPatchValues()
 		printf(" - SERVER_PENALTY_DROP_PROBABILITY (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x004E696D + 1, newValue);
 	}
+	if (ReadMemoryValue<uint8_t>(0x004F36F3 + 1, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Server", "NPC_RETURN_DEAD_LEVEL_MAX", 20);
+		printf(" - SERVER_NPC_RETURN_DEAD_LEVEL_MAX (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x004F36F3 + 1, newValue);
+	}
 
 	// Job
 	if (ReadMemoryValue<uint8_t>(0x0060DE69 + 3, byteValue))
@@ -325,10 +334,17 @@ void AppManager::InitPatchValues()
 		WriteMemoryValue<uint32_t>(0x005DD36A + 1, newValue);
 		WriteMemoryValue<uint32_t>(0x00651C7A + 2, newValue);
 	}
+	// Alchemy
+	if (ReadMemoryValue<uint8_t>(0x0052ADAA + 6, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Alchemy", "FUSING_DELAY", 3);
+		printf(" - ALCHEMY_FUSING_DELAY (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x0052ADAA + 6, newValue);
+	}
 
 	// Event
 	{
-		const char* newValue = ini.GetValue("Event", "CTF_ITEM_REWARD", "");
+		const char* newValue = ini.GetValue("Event", "CTF_ITEM_REWARD", "ITEM_ETC_E070919_TROPHY");
 		auto newValueLen = strlen(newValue);
 		// Change value if it's not empty and the CodeName is shorter than 128 bytes
 		if (newValueLen != 0 && newValueLen <= 128)
@@ -350,7 +366,7 @@ void AppManager::InitPatchValues()
 		WriteMemoryValue<uint8_t>(0x00646C93 + 4, newValue);
 	}
 	{
-		const char* newValue = ini.GetValue("Event", "BA_ITEM_REWARD", "");
+		const char* newValue = ini.GetValue("Event", "BA_ITEM_REWARD", "ITEM_ETC_ARENA_COIN");
 		auto newValueLen = strlen(newValue);
 		// Change value if it's not empty and the CodeName is shorter than 128 bytes
 		if (newValueLen != 0 && newValueLen <= 128)
@@ -417,6 +433,12 @@ void AppManager::InitPatchValues()
 		printf(" - FIX_DISABLE_MSGBOX_SILK_GOLD_PRICE\r\n");
 		WriteMemoryValue<uint8_t>(0x006A989E, 0xEB); // jne to jmp
 		WriteMemoryValue<uint8_t>(0x006A98CB, 0xEB); // jne to jmp
+	}
+	if (ini.GetBoolValue("Fix", "EXCHANGE_ATTACK_CANCEL", true))
+	{
+		printf(" - FIX_EXCHANGE_ATTACK_CANCEL\r\n");
+		for(int i = 0; i < 2; i++)
+			WriteMemoryValue<uint8_t>(0x00515578 + i, 0x90); // NOP call
 	}
 }
 void AppManager::InitDatabaseFetch()
