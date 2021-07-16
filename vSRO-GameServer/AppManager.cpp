@@ -191,8 +191,6 @@ void AppManager::InitPatchValues()
 		// Stall
 		WriteMemoryValue<uint8_t>(0x00471B00 + 2, newValue >> 32);
 		WriteMemoryValue<uint32_t>(0x00471B07 + 1, newValue);
-		WriteMemoryValue<uint8_t>(0x00471B00 + 2, newValue >> 32);
-		WriteMemoryValue<uint32_t>(0x00471B07 + 1, newValue);
 		WriteMemoryValue<uint8_t>(0x00472FF5 + 2, newValue >> 32);
 		WriteMemoryValue<uint32_t>(0x00473008 + 1, newValue);
 		WriteMemoryValue<uint8_t>(0x0047ABD8 + 2, newValue >> 32);
