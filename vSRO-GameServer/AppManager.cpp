@@ -54,6 +54,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "PENALTY_DROP_PROBABILITY", 5, "; % Probability to drop an item when a player dies");
 		ini.SetLongValue("Server", "PK_LEVEL_REQUIRED", 20, "; Level required to kill other player");
 		ini.SetLongValue("Server", "NPC_RETURN_DEAD_LEVEL_MAX", 20, "; Maximum level for using \"Return to last dead point\" from NPC Guide");
+		ini.SetLongValue("Server", "BEGINNER_MARK_LEVEL_MAX", 19, "; Maximum level to show the beginner mark");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL1", 15, "; Guild members capacity at level 1");
@@ -238,6 +239,13 @@ void AppManager::InitPatchValues()
 		printf(" - SERVER_NPC_RETURN_DEAD_LEVEL_MAX (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x004F36F3 + 1, newValue);
 	}
+	if (ReadMemoryValue<uint8_t>(0x004E4F0F + 4, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Server", "BEGINNER_MARK_LEVEL_MAX", 19);
+		printf(" - SERVER_BEGINNER_MARK_LEVEL_MAX (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x004E4F0F + 4, newValue);
+		WriteMemoryValue<uint8_t>(0x00518B99 + 3, newValue);
+	}
 
 	// Job
 	if (ReadMemoryValue<uint8_t>(0x0060DE69 + 3, byteValue))
@@ -332,6 +340,7 @@ void AppManager::InitPatchValues()
 		WriteMemoryValue<uint32_t>(0x005DD36A + 1, newValue);
 		WriteMemoryValue<uint32_t>(0x00651C7A + 2, newValue);
 	}
+
 	// Alchemy
 	if (ReadMemoryValue<uint8_t>(0x0052ADAA + 6, byteValue))
 	{
