@@ -24,8 +24,8 @@ uint16_t CGObjPC::AddItem(const char* Codename, int32_t Amount, bool RandomizeSt
 }
 void CGObjPC::UpdateGold(int64_t Offset)
 {
-	// Check if offset is higher than uint.MaxValue to avoid send a bugged message
-	if(Offset > 0xFFFFFFFF)
+	// Check if offset is higher than int.MaxValue to avoid send a bugged message
+	if(Offset > 0x7FFFFFFF)
 		UpdateGold(Offset, 25, true, false);
 	else
 		UpdateGold(Offset, 25, true, true);
