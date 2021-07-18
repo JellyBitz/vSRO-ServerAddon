@@ -14,7 +14,7 @@ Execute gameserver actions in realtime with a simple `INSERT` query into `SRO_VT
 
 ### Examples
 
-1. Adds item(s) to the inventory from character 
+1. Adds item(s) to the inventory from player 
 ```sql
 INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
@@ -22,7 +22,7 @@ INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 	CharName16,
 	Param01, -- CodeName
 	Param02, -- Amount
-	Param03, -- Randomize stats
+	Param03, -- Random stats (0 = Clean, 1 = Random)
 	Param04 -- Plus
 )
 VALUES
@@ -36,7 +36,7 @@ VALUES
 );
 ```
 
-2. Updates the gold amount from character by increasing (positive) or decreasing (negative)
+2. Updates the gold amount from player by increasing (positive) or decreasing (negative)
 ```sql
 INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
@@ -52,7 +52,7 @@ VALUES
 );
 ```
 
-3. Updates the Hwan level (Berserk rank) from character by level
+3. Updates the Hwan level (Berserk title) from player
 ```sql
 INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
@@ -68,7 +68,7 @@ VALUES
 );
 ```
 
-4. Moves the character to the position on map
+4. Moves the player to the position on map
 ```sql
 INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
@@ -90,7 +90,7 @@ VALUES
 );
 ```
 
-5. Moves the character to the position on map through game world id
+5. Moves the player to the position on map through game world id
 ```sql
 INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
@@ -114,7 +114,7 @@ VALUES
 );
 ```
 
-6. Drops an item near character
+6. Drops an item near player
 ```sql
 INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
@@ -152,7 +152,7 @@ VALUES
 );
 ```
 
-8. Force reloading the character information by teleporting it on the same place
+8. Force reloading the player information by teleporting it on the same place
 ```sql
 INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
@@ -166,7 +166,7 @@ VALUES
 );
 ```
 
-9. Adds a buff to the character. The duration will not be lost through teleports
+9. Adds a buff to the player. The duration will not be lost through teleports
 ```sql
 INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
 (
@@ -295,6 +295,38 @@ VALUES
 	15,
 	'JellyBitz',
 	0 -- Dead
+);
+```
+
+16. Updates level experience from player
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param02 -- Level Experience
+)
+VALUES
+(
+	16,
+	'JellyBitz',
+	1000000 -- Increase experience by 1m
+);
+```
+
+17. Add skill points experience to player
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param02 -- Skill Points Experience
+)
+VALUES
+(
+	17,
+	'JellyBitz',
+	1000000 -- Increase experience by 1m (equivalent to 2500 SP)
 );
 ```
 

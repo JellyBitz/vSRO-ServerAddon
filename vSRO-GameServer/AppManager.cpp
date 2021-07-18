@@ -818,6 +818,30 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
 				} break;
+				case 16: // Update Experience
+				{
+					SQLBIGINT cParam02;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_SBIGINT, &cParam02, 0, NULL))
+					{
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->UpdateExperience(cParam02);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+				} break;
+				case 17: // Add Skill Point Experience
+				{
+					SQLUINTEGER cParam02;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParam02, 0, NULL))
+					{
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->AddSPExperience(cParam02);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+				} break;
 				case 3312: // For testing references
 				{
 					CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);

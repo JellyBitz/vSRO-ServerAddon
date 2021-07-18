@@ -6,6 +6,8 @@ class CGObj
 {
 protected: /// Protected Members
 	uint32_t m_ptrVTable;
+	// Unique Identifier from this object
+	uint32_t m_UniqueID;
 public: /// Public Properties
 	// Gets the game world id as reference
 	void GetGameWorldId(uint32_t* OutGameWorldId);
