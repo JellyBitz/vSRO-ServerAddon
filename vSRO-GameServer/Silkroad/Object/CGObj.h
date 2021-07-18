@@ -6,11 +6,13 @@ class CGObj
 {
 protected: /// Protected Members
 	uint32_t m_ptrVTable;
-	// Unique Identifier from this object
-	uint32_t m_UniqueID;
+	// Unique Identifier
+	uint32_t m_UniqueId;
 public: /// Public Properties
 	// Gets the game world id as reference
 	void GetGameWorldId(uint32_t* OutGameWorldId);
+	// Get unique identifier from this object
+	uint32_t GetUniqueId();
 public: // Public Methods 
 	// Set life state
 	void SetLifeState(bool Alive);

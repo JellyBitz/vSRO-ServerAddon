@@ -6,6 +6,10 @@ void CGObj::GetGameWorldId(uint32_t* OutGameWorldId)
 {
 	CallVirtual<void(__thiscall*)(CGObj*, uint32_t*)>(this, 5)(this, OutGameWorldId);
 }
+uint32_t CGObj::GetUniqueId()
+{
+	return m_UniqueId;
+}
 /* Public Methods */
 void CGObj::SetLifeState(bool Alive)
 {

@@ -12,7 +12,6 @@ private: /// Private Members
 	char pad_0x38[76];
 	CPosition m_Position;
 public: /// Public Properties
-	uint32_t GetUniqueID();
 	// Gets the CharId from database
 	uint32_t GetCharID();
 	// Gets the current position

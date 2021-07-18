@@ -3,10 +3,6 @@
 #include "../../Silkroad/Text/GString.h"
 
 /* Public Properties */
-uint32_t CGObjPC::GetUniqueID()
-{
-	return m_UniqueID;
-}
 uint32_t CGObjPC::GetCharID()
 {
 	return m_CInstancePC->CharID;
@@ -36,11 +32,11 @@ void CGObjPC::UpdateHwan(uint8_t Level)
 }
 void CGObjPC::UpdateExperience(int64_t ExpOffset)
 {
-	CallVirtual<void(__thiscall*)(CGObjPC*, uint32_t, int64_t, uint32_t, std::uintptr_t*)>(this, 92)(this, m_UniqueID, ExpOffset, 0, nullptr);
+	CallVirtual<void(__thiscall*)(CGObjPC*, uint32_t, int64_t, uint32_t, std::uintptr_t*)>(this, 92)(this, m_UniqueId, ExpOffset, 0, nullptr);
 }
 void CGObjPC::AddSPExperience(uint32_t SPExpOffset)
 {
-	CallVirtual<void(__thiscall*)(CGObjPC*, uint32_t, int64_t, uint32_t, std::uintptr_t*)>(this, 92)(this, m_UniqueID, 0, SPExpOffset, nullptr);
+	CallVirtual<void(__thiscall*)(CGObjPC*, uint32_t, int64_t, uint32_t, std::uintptr_t*)>(this, 92)(this, m_UniqueId, 0, SPExpOffset, nullptr);
 }
 void CGObjPC::UpdateSP(int32_t Offset)
 {

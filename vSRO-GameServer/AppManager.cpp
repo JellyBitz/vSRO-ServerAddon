@@ -847,7 +847,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 					CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 					if (player)
 					{
-						std::cout << " - CGObjPC ptr: " << player << std::endl;
+						std::cout << " - CGObjPC ptr: " << player << "\r\n Unique Id: " << player->GetUniqueId() << "\r\n";
 					}
 					else
 						actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
