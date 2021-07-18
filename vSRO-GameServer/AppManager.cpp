@@ -82,6 +82,7 @@ void AppManager::InitConfigFile()
 		ini.SetBoolValue("Fix", "DISABLE_GREEN_BOOK", true, "; Disable buff with the green book");
 		ini.SetBoolValue("Fix", "DISABLE_MSGBOX_SILK_GOLD_PRICE", true, "; Disable messages about \"register silk/gold price.\"");
 		ini.SetBoolValue("Fix", "EXCHANGE_ATTACK_CANCEL", true, "; Remove attack cancel when player exchanges");
+		ini.SetBoolValue("Fix", "EXPLOIT_INVISIBLE_INVINCIBLE", true, "; Cancel exploit sent from client (0x70A7)");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -446,6 +447,12 @@ void AppManager::InitPatchValues()
 		printf(" - FIX_EXCHANGE_ATTACK_CANCEL\r\n");
 		for(int i = 0; i < 2; i++)
 			WriteMemoryValue<uint8_t>(0x00515578 + i, 0x90); // NOP call
+	}
+	if (ini.GetBoolValue("Fix", "EXPLOIT_INVISIBLE_INVINCIBLE", true))
+	{
+		printf(" - FIX_EXPLOIT_INVISIBLE_INVINCIBLE\r\n");
+		for (int i = 0; i < 2; i++)
+			WriteMemoryValue<uint8_t>(0x00515B78 + i, 0x90); // NOP jnz
 	}
 }
 void AppManager::InitDatabaseFetch()
