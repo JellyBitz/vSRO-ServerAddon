@@ -282,6 +282,22 @@ VALUES
 );
 ```
 
+15. Set the life state from player
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param02 -- Life State (0 = Dead, 1 = Alive)
+)
+VALUES
+(
+	15,
+	'JellyBitz',
+	0 -- Dead
+);
+```
+
 ### Action Result Code
 
 ```C++
