@@ -54,6 +54,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "PENALTY_DROP_PROBABILITY", 5, "; % Probability to drop an item when a player dies");
 		ini.SetLongValue("Server", "PK_LEVEL_REQUIRED", 20, "; Level required to kill other player");
 		ini.SetLongValue("Server", "NPC_RETURN_DEAD_LEVEL_MAX", 20, "; Maximum level for using \"Return to last dead point\" from NPC Guide");
+		ini.SetLongValue("Server", "BEGINNER_MARK_LEVEL_MAX", 19, "; Maximum level to show the beginner mark");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL1", 15, "; Guild members capacity at level 1");
@@ -81,6 +82,7 @@ void AppManager::InitConfigFile()
 		ini.SetBoolValue("Fix", "DISABLE_GREEN_BOOK", true, "; Disable buff with the green book");
 		ini.SetBoolValue("Fix", "DISABLE_MSGBOX_SILK_GOLD_PRICE", true, "; Disable messages about \"register silk/gold price.\"");
 		ini.SetBoolValue("Fix", "EXCHANGE_ATTACK_CANCEL", true, "; Remove attack cancel when player exchanges");
+		ini.SetBoolValue("Fix", "EXPLOIT_INVISIBLE_INVINCIBLE", true, "; Cancel exploit sent from client (0x70A7)");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -191,8 +193,6 @@ void AppManager::InitPatchValues()
 		// Stall
 		WriteMemoryValue<uint8_t>(0x00471B00 + 2, newValue >> 32);
 		WriteMemoryValue<uint32_t>(0x00471B07 + 1, newValue);
-		WriteMemoryValue<uint8_t>(0x00471B00 + 2, newValue >> 32);
-		WriteMemoryValue<uint32_t>(0x00471B07 + 1, newValue);
 		WriteMemoryValue<uint8_t>(0x00472FF5 + 2, newValue >> 32);
 		WriteMemoryValue<uint32_t>(0x00473008 + 1, newValue);
 		WriteMemoryValue<uint8_t>(0x0047ABD8 + 2, newValue >> 32);
@@ -239,6 +239,13 @@ void AppManager::InitPatchValues()
 		uint8_t newValue = ini.GetLongValue("Server", "NPC_RETURN_DEAD_LEVEL_MAX", 20);
 		printf(" - SERVER_NPC_RETURN_DEAD_LEVEL_MAX (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x004F36F3 + 1, newValue);
+	}
+	if (ReadMemoryValue<uint8_t>(0x004E4F0F + 4, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Server", "BEGINNER_MARK_LEVEL_MAX", 19);
+		printf(" - SERVER_BEGINNER_MARK_LEVEL_MAX (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x004E4F0F + 4, newValue);
+		WriteMemoryValue<uint8_t>(0x00518B99 + 3, newValue);
 	}
 
 	// Job
@@ -334,6 +341,7 @@ void AppManager::InitPatchValues()
 		WriteMemoryValue<uint32_t>(0x005DD36A + 1, newValue);
 		WriteMemoryValue<uint32_t>(0x00651C7A + 2, newValue);
 	}
+
 	// Alchemy
 	if (ReadMemoryValue<uint8_t>(0x0052ADAA + 6, byteValue))
 	{
@@ -439,6 +447,12 @@ void AppManager::InitPatchValues()
 		printf(" - FIX_EXCHANGE_ATTACK_CANCEL\r\n");
 		for(int i = 0; i < 2; i++)
 			WriteMemoryValue<uint8_t>(0x00515578 + i, 0x90); // NOP call
+	}
+	if (ini.GetBoolValue("Fix", "EXPLOIT_INVISIBLE_INVINCIBLE", true))
+	{
+		printf(" - FIX_EXPLOIT_INVISIBLE_INVINCIBLE\r\n");
+		for (int i = 0; i < 2; i++)
+			WriteMemoryValue<uint8_t>(0x00515B78 + i, 0x90); // NOP jnz
 	}
 }
 void AppManager::InitDatabaseFetch()
@@ -792,12 +806,48 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
 				} break;
+				case 15: // Set Life State
+				{
+					SQLUSMALLINT cParam02;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_USHORT, &cParam02, 0, NULL))
+					{
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->SetLifeState(cParam02 != 0);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+				} break;
+				case 16: // Update Experience
+				{
+					SQLBIGINT cParam02;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_SBIGINT, &cParam02, 0, NULL))
+					{
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->UpdateExperience(cParam02);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+				} break;
+				case 17: // Add Skill Point Experience
+				{
+					SQLUINTEGER cParam02;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_ULONG, &cParam02, 0, NULL))
+					{
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->AddSPExperience(cParam02);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+				} break;
 				case 3312: // For testing references
 				{
 					CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 					if (player)
 					{
-						std::cout << " - CGObjPC ptr: " << player << std::endl;
+						std::cout << " - CGObjPC ptr: " << player << "\r\n Unique Id: " << player->GetUniqueId() << "\r\n";
 					}
 					else
 						actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;

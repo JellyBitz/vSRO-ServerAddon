@@ -7,13 +7,11 @@
 class CGObjPC : public CGObjChar
 {
 private: /// Private Members
-	uint32_t m_UniqueID;
 	char pad_0x8[44];
 	CInstancePC* m_CInstancePC;
 	char pad_0x38[76];
 	CPosition m_Position;
 public: /// Public Properties
-	uint32_t GetUniqueID();
 	// Gets the CharId from database
 	uint32_t GetCharID();
 	// Gets the current position
@@ -25,8 +23,12 @@ public: /// Public Methods
 	void UpdateGold(int64_t Offset);
 	// Update hwan title by level
 	void UpdateHwan(uint8_t Level);
-	// Update the current SP Experience
+	// Update the current Skill Points
 	void UpdateSP(int32_t Offset);
+	// Update level experience
+	void UpdateExperience(int64_t ExpOffset);
+	// Add skill experience
+	void AddSPExperience(uint32_t SPExpOffset);
 	// Updates the HP and MP
 	void UpdateHPMP(int32_t Health, int32_t Mana, uint16_t DisplayEffectType);
 	// Moves the player to the map location. Return success
