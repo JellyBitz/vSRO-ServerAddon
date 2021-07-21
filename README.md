@@ -3,10 +3,22 @@
 Customize Silkroad Online server files (v1.188) behavior through DLL injection.
 
 ## Features
+- Easy to inject using *Stud_PE*
 - Patch values from memory directly
-- Define all options from the respective config file
-- Easy to inject using STUD_PE
-- Execute actions from Gameserver (the first gameserver running will execute these actions)
+- Define all options from their respective config file
+- Execute actions from Gameserver (first gameserver running on the same machine will execute these actions)
+
+## How to use?
+
+1. Make a backup from your `SR_GameServer.exe` and `SR_ShardManager.exe` just in case something goes wrong
+2. Download, install, and execute [*Stud_PE*](http://www.cgsoftlabs.ro/zip/Stud_PE.zip)
+3. Drag & drop `SR_GameServer.exe` into *Stud_PE*
+4. Go to `Functions` tab, right click into any line at left blue panel and click `Add New Import`
+5. Click `Dll Select` and find `vSRO-GameServer.dll`
+6. Click `Select func` and select the one there, then `OK`
+7. Click `Add to list` and click `ADD`, then `OK`
+8. Extract `vSRO-ServerAddon.bin.zip` to the same folder where is located `SR_GameServer.exe`
+9. Done! Just repeat Step 3 to 7 using `SR_ShardManager.exe` and `vSRO-ShardManager.dll`
 
 ## Gameserver Actions
 
