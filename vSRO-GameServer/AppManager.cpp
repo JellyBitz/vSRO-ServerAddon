@@ -69,6 +69,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Academy", "GRADUATE_BEGINNER_LEVEL", 40, "; Graduation level for the beginner members");
 		ini.SetLongValue("Academy", "DISBAND_PENALTY_TIME", 604800, "; Penalty time (seconds) to create again the group");
 		ini.SetLongValue("Alchemy", "FUSING_DELAY", 3, "; Waiting delay (seconds) after fusing alchemy elements");
+		ini.SetLongValue("Alchemy", "STONE_ASTRAL_VALUE", 4, "; Value from astral stones used to stop and prevent +0");
 		ini.SetValue("Event","CTF_ITEM_REWARD","ITEM_ETC_E070919_TROPHY","; Item reward from Capture The Flag");
 		ini.SetLongValue("Event", "CTF_ITEM_REWARD_AMOUNT", 1, "; Amount to obtain per every kill");
 		ini.SetValue("Event","BA_ITEM_REWARD","ITEM_ETC_ARENA_COIN","; Item reward from Battle Arena");
@@ -348,6 +349,13 @@ void AppManager::InitPatchValues()
 		uint8_t newValue = ini.GetLongValue("Alchemy", "FUSING_DELAY", 3);
 		printf(" - ALCHEMY_FUSING_DELAY (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x0052ADAA + 6, newValue);
+	}
+	if (ReadMemoryValue<uint8_t>(0x00506D92 + 2, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Alchemy", "STONE_ASTRAL_VALUE", 4);
+		printf(" - ALCHEMY_STONE_ASTRAL_VALUE (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x00506D92 + 2, newValue);
+		WriteMemoryValue<uint8_t>(0x00506DD2 + 1, newValue);
 	}
 
 	// Event
