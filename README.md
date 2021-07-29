@@ -342,6 +342,23 @@ VALUES
 );
 ```
 
+18. Updates PVP cape type from player
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param02 -- PVP Type (0 = None, 1 = Red, 2 = Gray, 3 = Blue, 4 = White, 5 = Yellow)
+)
+VALUES
+(
+	18,
+	'JellyBitz',
+	5 -- Yellow (All are enemies)
+);
+```
+
+
 ### Action Result Code
 
 ```C++

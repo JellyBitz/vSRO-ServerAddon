@@ -28,7 +28,7 @@ void CGObjPC::UpdateGold(int64_t Offset)
 }
 void CGObjPC::UpdateHwan(uint8_t Level)
 {
-	reinterpret_cast<void(__thiscall*)(CGObjPC*, uint8_t)>(0x004A9F40)(this, Level);
+	return CallVirtual<void(__thiscall*)(CGObjPC*, uint8_t)>(this, 197)(this, Level);
 }
 void CGObjPC::UpdateExperience(int64_t ExpOffset)
 {
@@ -45,6 +45,12 @@ void CGObjPC::UpdateSP(int32_t Offset)
 void CGObjPC::UpdateHPMP(int32_t Health, int32_t Mana, uint16_t DisplayEffectType)
 {
 	CallVirtual<void(__thiscall*)(CGObjPC*, int32_t, int32_t, uint16_t)>(this, 194)(this, Health, Mana, DisplayEffectType);
+}
+void CGObjPC::UpdatePVPCapeType(uint8_t CapeType)
+{
+	// Avoid unnecesary updates
+	if (CapeType <= 5)
+		reinterpret_cast<void(__thiscall*)(CGObjPC*, uint8_t)>(0x004F0E90)(this, CapeType);
 }
 bool CGObjPC::MoveTo(uint16_t RegionId, float PosX, float PosY, float PosZ)
 {
