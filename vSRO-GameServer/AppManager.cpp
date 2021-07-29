@@ -53,6 +53,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "PARTY_MOB_MEMBERS_REQUIRED", 2, "; Party members required to find monsters party type");
 		ini.SetLongValue("Server", "PARTY_MOB_SPAWN_PROBABILITY", 50, "; % Probability for party mob spawns");
 		ini.SetLongValue("Server", "PK_LEVEL_REQUIRED", 20, "; Level required to kill other player");
+		ini.SetLongValue("Server", "PENALTY_DROP_LEVEL_MIN", 10, "; Minimum level to apply drop penalty");
 		ini.SetLongValue("Server", "PENALTY_DROP_PROBABILITY", 5, "; % Probability to drop an item when a player dies");
 		ini.SetLongValue("Server", "RESURRECT_SAME_POINT_LEVEL_MAX", 10, "; Maximum level for resurrect at the same map position");
 		ini.SetLongValue("Server", "NPC_RETURN_DEAD_LEVEL_MAX", 20, "; Maximum level for using \"Return to last dead point\" from NPC Guide");
@@ -232,6 +233,12 @@ void AppManager::InitPatchValues()
 		uint8_t newValue = ini.GetLongValue("Server", "PK_LEVEL_REQUIRED", 20);
 		printf(" - SERVER_PK_LEVEL_REQUIRED (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x005295DA + 1, newValue);
+	}
+	if (ReadMemoryValue<uint8_t>(0x004E6A33 + 1, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Server", "PENALTY_DROP_LEVEL_MIN", 10);
+		printf(" - SERVER_PENALTY_DROP_LEVEL_MIN (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x004E6A33 + 1, newValue);
 	}
 	if (ReadMemoryValue<uint8_t>(0x004E696D + 1, byteValue))
 	{
