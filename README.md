@@ -12,13 +12,13 @@ Customize Silkroad Online server files (v1.188) behavior through DLL injection.
 
 1. Make a backup from your `SR_GameServer.exe` and `SR_ShardManager.exe` just in case something goes wrong
 2. Download, install, and execute [*Stud_PE*](http://www.cgsoftlabs.ro/zip/Stud_PE.zip)
-3. Drag & drop `SR_GameServer.exe` into *Stud_PE*
-4. Go to `Functions` tab, right click into any line at left blue panel and click `Add New Import`
-5. Click `Dll Select` and find `vSRO-GameServer.dll`
-6. Click `Select func` and select the one there, then `OK`
-7. Click `Add to list` and click `ADD`, then `OK`
-8. Extract `vSRO-ServerAddon.bin.zip` to the same folder where is located `SR_GameServer.exe`
-9. Done! Just repeat Step 3 to 7 using `SR_ShardManager.exe` and `vSRO-ShardManager.dll`
+3. Extract `vSRO-ServerAddon.bin.zip` to the folder where your server files are located
+4. Drag & drop `SR_GameServer.exe` into *Stud_PE*
+5. Go to `Functions` tab, right click into any line at left blue panel and click `Add New Import`
+6. Click `Dll Select` and find `vSRO-GameServer.dll`
+7. Click `Select func` and select the one there, then `OK`
+8. Click `Add to list` and click `ADD`, then `OK`
+9. Done! Just repeat Step 4 to 8 using `SR_ShardManager.exe` and `vSRO-ShardManager.dll`
 
 ## Gameserver Actions
 
