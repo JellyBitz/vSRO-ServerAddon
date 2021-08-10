@@ -48,6 +48,16 @@ This is a compilations of ASM/editions for vSRO (1.188) that you'll need to chan
 006BA767 | 68 FFE30B54              | push 540BE3FF                     |
 ```
 
+### SERVER_RESURRECT_SAME_POINT_LEVEL_MAX
+
+0xA = 10
+
+```
+00645688 | 3C 0A                    | cmp al,A                                     | Show message
+
+00797E21 | 3C 0A                    | cmp al,A                                     | Unlock action
+```
+
 ### RACE_CH_TOTAL_MASTERIES
 
 0x14A = 330, 0xDC = 220

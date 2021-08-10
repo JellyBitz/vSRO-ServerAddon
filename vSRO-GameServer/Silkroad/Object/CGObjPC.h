@@ -31,6 +31,8 @@ public: /// Public Methods
 	void AddSPExperience(uint32_t SPExpOffset);
 	// Updates the HP and MP
 	void UpdateHPMP(int32_t Health, int32_t Mana, uint16_t DisplayEffectType);
+	// Updates the cape state from PVP
+	void UpdatePVPCapeType(uint8_t CapeType);
 	// Moves the player to the map location. Return success
 	bool MoveTo(uint16_t RegionId, float PosX, float PosY, float PosZ);
 	// Moves the player to the gameworld and map location. Return success

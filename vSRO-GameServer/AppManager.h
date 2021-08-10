@@ -3,6 +3,7 @@
 #include "Database/SQLConnection.h"
 #include "Database/SQLCommand.h"
 #include <cstdint>
+#include <string>
 
 // All states fetching can generate
 enum FETCH_ACTION_STATE {
@@ -31,6 +32,10 @@ private: // Private members
 	static DatabaseLink m_dbLink, m_dbLinkHelper, m_dbUniqueLog;
 	// Flag to keep thread safe
 	static bool m_IsRunningDatabaseFetch;
+	// Keeps in memory the value assigned
+	static std::string m_CTF_ITEM_WINNING_REWARD;
+	static std::string m_CTF_ITEM_KILLING_REWARD;
+	static std::string m_BA_ITEM_REWARD;
 public: // Public Methods
 	// Initialize manager
 	static void Initialize();

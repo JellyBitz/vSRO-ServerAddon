@@ -19,6 +19,7 @@
 bool AppManager::m_IsInitialized;
 DatabaseLink AppManager::m_dbLink, AppManager::m_dbLinkHelper, AppManager::m_dbUniqueLog;
 bool AppManager::m_IsRunningDatabaseFetch;
+std::string AppManager::m_CTF_ITEM_WINNING_REWARD, AppManager::m_CTF_ITEM_KILLING_REWARD, AppManager::m_BA_ITEM_REWARD;
 
 void AppManager::Initialize()
 {
@@ -51,11 +52,14 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "STALL_PRICE_LIMIT", 9999999999, "; Maximum price that can be stalled");
 		ini.SetLongValue("Server", "PARTY_MOB_MEMBERS_REQUIRED", 2, "; Party members required to find monsters party type");
 		ini.SetLongValue("Server", "PARTY_MOB_SPAWN_PROBABILITY", 50, "; % Probability for party mob spawns");
-		ini.SetLongValue("Server", "PENALTY_DROP_PROBABILITY", 5, "; % Probability to drop an item when a player dies");
 		ini.SetLongValue("Server", "PK_LEVEL_REQUIRED", 20, "; Level required to kill other player");
+		ini.SetLongValue("Server", "PENALTY_DROP_LEVEL_MIN", 10, "; Minimum level to apply drop penalty");
+		ini.SetLongValue("Server", "PENALTY_DROP_PROBABILITY", 5, "; % Probability to drop an item when a player dies");
+		ini.SetLongValue("Server", "RESURRECT_SAME_POINT_LEVEL_MAX", 10, "; Maximum level for resurrect at the same map position");
 		ini.SetLongValue("Server", "NPC_RETURN_DEAD_LEVEL_MAX", 20, "; Maximum level for using \"Return to last dead point\" from NPC Guide");
 		ini.SetLongValue("Server", "BEGINNER_MARK_LEVEL_MAX", 19, "; Maximum level to show the beginner mark");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
+		ini.SetBoolValue("Job", "DISABLE_MOB_SPAWN", false, "; Disable Thief/Hunter monster spawn while trading");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL1", 15, "; Guild members capacity at level 1");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL2", 20, "; Guild members capacity at level 2");
@@ -66,16 +70,18 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Guild", "STORAGE_SLOTS_INCREASE", 30, "; Storage slots increased per level");
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
 		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12, "; Union chat participants allowed by guild");
-		ini.SetLongValue("Academy", "GRADUATE_BEGINNER_LEVEL", 40, "; Graduation level for the beginner members");
 		ini.SetLongValue("Academy", "DISBAND_PENALTY_TIME", 604800, "; Penalty time (seconds) to create again the group");
 		ini.SetLongValue("Alchemy", "FUSING_DELAY", 3, "; Waiting delay (seconds) after fusing alchemy elements");
-		ini.SetValue("Event","CTF_ITEM_REWARD","ITEM_ETC_E070919_TROPHY","; Item reward from Capture The Flag");
-		ini.SetLongValue("Event", "CTF_ITEM_REWARD_AMOUNT", 1, "; Amount to obtain per every kill");
+		ini.SetLongValue("Alchemy", "STONE_ASTRAL_VALUE", 4, "; Value from astral stones used to stop and prevent +0");
+		ini.SetValue("Event", "CTF_ITEM_WIN_REWARD", "ITEM_ETC_E080723_ICETROPHY", "; Item reward from winning Capture The Flag");
+		ini.SetLongValue("Event", "CTF_ITEM_WIN_REWARD_AMOUNT", 1, "; Amount to obtain by winning");
+		ini.SetValue("Event", "CTF_ITEM_KILL_REWARD", "ITEM_ETC_E080723_ICETROPHY", "; Item reward from killing at Capture The Flag");
+		ini.SetLongValue("Event", "CTF_ITEM_KILL_REWARD_AMOUNT", 1, "; Amount to obtain by kill");
 		ini.SetValue("Event","BA_ITEM_REWARD","ITEM_ETC_ARENA_COIN","; Item reward from Battle Arena");
 		ini.SetLongValue("Event", "BA_ITEM_REWARD_GJ_W_AMOUNT", 7, "; Amount to obtain winning on Guild/Job mode");
 		ini.SetLongValue("Event", "BA_ITEM_REWARD_GJ_L_AMOUNT", 2, "; Amount to obtain loosing");
-		ini.SetLongValue("Event", "BA_ITEM_REWARD_PR_W_AMOUNT", 7, "; Amount to obtain winning on Party/Random mode");
-		ini.SetLongValue("Event", "BA_ITEM_REWARD_PR_L_AMOUNT", 2, "; Amount to obtain loosing");
+		ini.SetLongValue("Event", "BA_ITEM_REWARD_PR_W_AMOUNT", 5, "; Amount to obtain winning on Party/Random mode");
+		ini.SetLongValue("Event", "BA_ITEM_REWARD_PR_L_AMOUNT", 1, "; Amount to obtain loosing");
 		ini.SetLongValue("Fix", "AGENT_SERVER_CAPACITY", 1000, "; Set capacity supported by the connected agent server");
 		ini.SetBoolValue("Fix", "HIGH_RATES_CONFIG", true, "; Fix rates (ExpRatio/1000) to use higher values than 2500");
 		ini.SetBoolValue("Fix", "UNIQUE_LOGS", true, "; Log unique spawn/killed into _AddLogChar as EventID = 32/33");
@@ -228,11 +234,23 @@ void AppManager::InitPatchValues()
 		printf(" - SERVER_PK_LEVEL_REQUIRED (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x005295DA + 1, newValue);
 	}
+	if (ReadMemoryValue<uint8_t>(0x004E6A33 + 1, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Server", "PENALTY_DROP_LEVEL_MIN", 10);
+		printf(" - SERVER_PENALTY_DROP_LEVEL_MIN (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x004E6A33 + 1, newValue);
+	}
 	if (ReadMemoryValue<uint8_t>(0x004E696D + 1, byteValue))
 	{
 		uint8_t newValue = ini.GetLongValue("Server", "PENALTY_DROP_PROBABILITY", 5);
 		printf(" - SERVER_PENALTY_DROP_PROBABILITY (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x004E696D + 1, newValue);
+	}
+	if (ReadMemoryValue<uint8_t>(0x0051017F + 1, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Server", "RESURRECT_SAME_POINT_LEVEL_MAX", 10);
+		printf(" - SERVER_RESURRECT_SAME_POINT_LEVEL_MAX (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x0051017F + 1, newValue);
 	}
 	if (ReadMemoryValue<uint8_t>(0x004F36F3 + 1, byteValue))
 	{
@@ -255,7 +273,12 @@ void AppManager::InitPatchValues()
 		printf(" - JOB_LEVEL_MAX (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x0060DE69 + 3, newValue);
 	}
-	
+	if (ini.GetBoolValue("Job", "DISABLE_MOB_SPAWN", false))
+	{
+		printf(" - JOB_DISABLE_MOB_SPAWN\r\n");
+		WriteMemoryValue<uint16_t>(0x0060C4AB, 0xC031); // mov eax,esi -> xor eax,eax
+	}
+
 	// Race
 	if (ReadMemoryValue<uint32_t>(0x0059C5E6 + 1, uintValue))
 	{
@@ -327,13 +350,6 @@ void AppManager::InitPatchValues()
 	}
 
 	// Academy
-	if (ReadMemoryValue<uint8_t>(0x00519883 + 2, byteValue))
-	{
-		uint8_t newValue = ini.GetLongValue("Academy", "GRADUATE_BEGINNER_LEVEL", 40);
-		printf(" - ACADEMY_GRADUATE_BEGINNER_LEVEL (%d) -> (%d)\r\n", byteValue, newValue);
-		WriteMemoryValue<uint8_t>(0x00519883 + 2, newValue);
-		WriteMemoryValue<uint8_t>(0x005196CD + 1, newValue);
-	}
 	if (ReadMemoryValue<uint32_t>(0x005DD36A + 1, uintValue))
 	{
 		uint32_t newValue = ini.GetLongValue("Academy", "DISBAND_PENALTY_TIME", 604800);
@@ -349,42 +365,71 @@ void AppManager::InitPatchValues()
 		printf(" - ALCHEMY_FUSING_DELAY (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x0052ADAA + 6, newValue);
 	}
+	if (ReadMemoryValue<uint8_t>(0x00506D92 + 2, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Alchemy", "STONE_ASTRAL_VALUE", 4);
+		printf(" - ALCHEMY_STONE_ASTRAL_VALUE (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x00506D92 + 2, newValue);
+		WriteMemoryValue<uint8_t>(0x00506DD2 + 1, newValue);
+	}
 
 	// Event
 	{
-		const char* newValue = ini.GetValue("Event", "CTF_ITEM_REWARD", "ITEM_ETC_E070919_TROPHY");
-		auto newValueLen = strlen(newValue);
-		// Change value if it's not empty and the CodeName is shorter than 128 bytes
-		if (newValueLen != 0 && newValueLen <= 128)
+		auto currentValue = ReadMemoryString(0x00646D42 + 1);
+		if (!currentValue.empty())
 		{
-			auto currentValue = ReadMemoryString(0x00646D42 + 1);
-			printf(" - EVENT_CTF_ITEM_REWARD (%s) -> (%s)\r\n", currentValue.c_str(), newValue);
-			// Overwrites new char* into empty memory
-			WriteMemoryString(0x00AD8FFD - 130, newValue);
-			// Set char* pointer to the new value
-			WriteMemoryValue<uint32_t>(0x00646D42 + 1, 0x00AD8FFD - 130);
-			WriteMemoryValue<uint32_t>(0x005F19A9 + 1, 0x00AD8FFD - 130);
-			WriteMemoryValue<uint32_t>(0x00876935 + 6, 0x00AD8FFD - 130);
+			m_CTF_ITEM_WINNING_REWARD = ini.GetValue("Event", "CTF_ITEM_WIN_REWARD", "ITEM_ETC_E080723_ICETROPHY");
+			auto newValueLen = m_CTF_ITEM_WINNING_REWARD.size();
+			// Check value it's not empty and shorter than 128 bytes
+			if (newValueLen != 0 && newValueLen <= 128)
+			{
+				printf(" - EVENT_CTF_ITEM_WIN_REWARD (%s) -> (%s)\r\n", currentValue.c_str(), m_CTF_ITEM_WINNING_REWARD.c_str());
+				// Set char* pointer to the new value
+				WriteMemoryValue<uint32_t>(0x00646D42 + 1, (uint32_t)m_CTF_ITEM_WINNING_REWARD.c_str()); // Winning Reward
+				WriteMemoryValue<uint32_t>(0x00876935 + 6, (uint32_t)m_CTF_ITEM_WINNING_REWARD.c_str()); // Just in case, something about Quest reward required probably
+			}
 		}
 	}
-	if (ReadMemoryValue<uint8_t>(0x00646C93 + 4, byteValue))
+	if (ReadMemoryValue<uint8_t>(0x00646D40 + 1, byteValue))
 	{
-		uint8_t newValue = ini.GetLongValue("Event", "CTF_ITEM_REWARD_AMOUNT", 1);
-		printf(" - EVENT_CTF_ITEM_REWARD_AMOUNT (%d) -> (%d)\r\n", byteValue, newValue);
-		WriteMemoryValue<uint8_t>(0x00646C93 + 4, newValue);
+		uint8_t newValue = ini.GetLongValue("Event", "CTF_ITEM_WIN_REWARD_AMOUNT", 1);
+		printf(" - EVENT_CTF_ITEM_WIN_REWARD_AMOUNT (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x00646D40 + 1, newValue);
 	}
 	{
-		const char* newValue = ini.GetValue("Event", "BA_ITEM_REWARD", "ITEM_ETC_ARENA_COIN");
-		auto newValueLen = strlen(newValue);
-		// Change value if it's not empty and the CodeName is shorter than 128 bytes
-		if (newValueLen != 0 && newValueLen <= 128)
+		auto currentValue = ReadMemoryString(0x005F19A9 + 1);
+		if (!currentValue.empty())
 		{
-			auto currentValue = ReadMemoryString(0x006691C6 + 1);
-			printf(" - EVENT_BA_ITEM_REWARD (%s) -> (%s)\r\n", currentValue.c_str(), newValue);
-			// Overwrites new char* into empty memory
-			WriteMemoryString(0x00AD8FFD - 130 - 130, newValue);
-			// Set char* pointer to the new value
-			WriteMemoryValue<uint32_t>(0x006691C6 + 1, 0x00AD8FFD - 130 - 130);
+			m_CTF_ITEM_KILLING_REWARD = ini.GetValue("Event", "CTF_ITEM_KILL_REWARD", "ITEM_ETC_E080723_ICETROPHY");
+			auto newValueLen = m_CTF_ITEM_KILLING_REWARD.size();
+			// Check value it's not empty and shorter than 128 bytes
+			if (newValueLen != 0 && newValueLen <= 128)
+			{
+				printf(" - EVENT_CTF_ITEM_KILL_REWARD (%s) -> (%s)\r\n", currentValue.c_str(), m_CTF_ITEM_KILLING_REWARD.c_str());
+				// Set char* pointer to the new value
+				WriteMemoryValue<uint32_t>(0x005F19A9 + 1, (uint32_t)m_CTF_ITEM_KILLING_REWARD.c_str()); // Killing Reward
+			}
+		}
+	}
+	if (ReadMemoryValue<uint8_t>(0x005F1997 + 1, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Event", "CTF_ITEM_KILL_REWARD_AMOUNT", 1);
+		printf(" - EVENT_CTF_ITEM_KILL_REWARD_AMOUNT (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x005F1997 + 1, newValue);
+	}
+	{
+		auto currentValue = ReadMemoryString(0x006691C6 + 1);
+		if (!currentValue.empty())
+		{
+			m_BA_ITEM_REWARD = ini.GetValue("Event", "BA_ITEM_REWARD", "ITEM_ETC_ARENA_COIN");
+			auto newValueLen = m_BA_ITEM_REWARD.size();
+			// Check value it's not empty and shorter than 128 bytes
+			if (newValueLen != 0 && newValueLen <= 128)
+			{
+				printf(" - EVENT_BA_ITEM_REWARD (%s) -> (%s)\r\n", currentValue.c_str(), m_BA_ITEM_REWARD.c_str());
+				// Set char* pointer to the new value
+				WriteMemoryValue<uint32_t>(0x006691C6 + 1, (uint32_t)m_BA_ITEM_REWARD.c_str());
+			}
 		}
 	}
 	if (ReadMemoryValue<uint8_t>(0x00669158 + 4, byteValue))
@@ -401,13 +446,13 @@ void AppManager::InitPatchValues()
 	}
 	if (ReadMemoryValue<uint8_t>(0x0066915F + 4, byteValue))
 	{
-		uint8_t newValue = ini.GetLongValue("Event", "BA_ITEM_REWARD_PR_W_AMOUNT", 7);
+		uint8_t newValue = ini.GetLongValue("Event", "BA_ITEM_REWARD_PR_W_AMOUNT", 5);
 		printf(" - EVENT_BA_ITEM_REWARD_PR_W_AMOUNT (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x0066915F + 4, newValue);
 	}
 	if (ReadMemoryValue<uint8_t>(0x0066917A + 4, byteValue))
 	{
-		uint8_t newValue = ini.GetLongValue("Event", "BA_ITEM_REWARD_PR_L_AMOUNT", 2);
+		uint8_t newValue = ini.GetLongValue("Event", "BA_ITEM_REWARD_PR_L_AMOUNT", 1);
 		printf(" - EVENT_BA_ITEM_REWARD_PR_L_AMOUNT (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x0066917A + 4, newValue);
 	}
@@ -477,7 +522,7 @@ void AppManager::InitDatabaseFetch()
 	connString << "SERVER=" << ini.GetValue("Sql", "HOST", "localhost") << ", " << ini.GetValue("Sql", "PORT", "1433") << ";";
 	connString << "DATABASE=" << ini.GetValue("Sql", "DB_SHARD", "SRO_VT_SHARD") << ";";
 	connString << "UID=" << ini.GetValue("Sql", "USER", "sa") << ";";
-	connString << "PWD=" << ini.GetValue("Sql", "PASS", "12341") << ";";
+	connString << "PWD=" << ini.GetValue("Sql", "PASS", "1234") << ";";
 
 	if (m_dbLink.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbLink.sqlCmd.Open(m_dbLink.sqlConn)
 		&& m_dbLinkHelper.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbLinkHelper.sqlCmd.Open(m_dbLinkHelper.sqlConn))
@@ -838,6 +883,18 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 						if (player)
 							player->AddSPExperience(cParam02);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+				} break;
+				case 18: // Update PVP cape type
+				{
+					SQLUSMALLINT cParam02;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_USHORT, &cParam02, 0, NULL))
+					{
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->UpdatePVPCapeType(cParam02);
 						else
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}

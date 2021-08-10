@@ -12,13 +12,13 @@ Customize Silkroad Online server files (v1.188) behavior through DLL injection.
 
 1. Make a backup from your `SR_GameServer.exe` and `SR_ShardManager.exe` just in case something goes wrong
 2. Download, install, and execute [*Stud_PE*](http://www.cgsoftlabs.ro/zip/Stud_PE.zip)
-3. Drag & drop `SR_GameServer.exe` into *Stud_PE*
-4. Go to `Functions` tab, right click into any line at left blue panel and click `Add New Import`
-5. Click `Dll Select` and find `vSRO-GameServer.dll`
-6. Click `Select func` and select the one there, then `OK`
-7. Click `Add to list` and click `ADD`, then `OK`
-8. Extract `vSRO-ServerAddon.bin.zip` to the same folder where is located `SR_GameServer.exe`
-9. Done! Just repeat Step 3 to 7 using `SR_ShardManager.exe` and `vSRO-ShardManager.dll`
+3. Extract `vSRO-ServerAddon.bin.zip` to the folder where your server files are located
+4. Drag & drop `SR_GameServer.exe` into *Stud_PE*
+5. Go to `Functions` tab, right click into any line at left blue panel and click `Add New Import`
+6. Click `Dll Select` and find `vSRO-GameServer.dll`
+7. Click `Select func` and select the one there, then `OK`
+8. Click `Add to list` and click `ADD`, then `OK`
+9. Done! Just repeat Step 4 to 8 using `SR_ShardManager.exe` and `vSRO-ShardManager.dll`
 
 ## Gameserver Actions
 
@@ -341,6 +341,23 @@ VALUES
 	1000000 -- Increase experience by 1m (equivalent to 2500 SP)
 );
 ```
+
+18. Updates PVP cape type from player
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param02 -- PVP Type (0 = None, 1 = Red, 2 = Gray, 3 = Blue, 4 = White, 5 = Yellow)
+)
+VALUES
+(
+	18,
+	'JellyBitz',
+	5 -- Yellow (All are enemies)
+);
+```
+
 
 ### Action Result Code
 
