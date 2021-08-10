@@ -69,7 +69,6 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Guild", "STORAGE_SLOTS_INCREASE", 30, "; Storage slots increased per level");
 		ini.SetLongValue("Guild", "UNION_LIMIT", 8, "; Union participants limit");
 		ini.SetLongValue("Guild", "UNION_CHAT_PARTICIPANTS", 12, "; Union chat participants allowed by guild");
-		ini.SetLongValue("Academy", "GRADUATE_BEGINNER_LEVEL", 40, "; Graduation level for the beginner members");
 		ini.SetLongValue("Academy", "DISBAND_PENALTY_TIME", 604800, "; Penalty time (seconds) to create again the group");
 		ini.SetLongValue("Alchemy", "FUSING_DELAY", 3, "; Waiting delay (seconds) after fusing alchemy elements");
 		ini.SetLongValue("Alchemy", "STONE_ASTRAL_VALUE", 4, "; Value from astral stones used to stop and prevent +0");
@@ -345,13 +344,6 @@ void AppManager::InitPatchValues()
 	}
 
 	// Academy
-	if (ReadMemoryValue<uint8_t>(0x00519883 + 2, byteValue))
-	{
-		uint8_t newValue = ini.GetLongValue("Academy", "GRADUATE_BEGINNER_LEVEL", 40);
-		printf(" - ACADEMY_GRADUATE_BEGINNER_LEVEL (%d) -> (%d)\r\n", byteValue, newValue);
-		WriteMemoryValue<uint8_t>(0x00519883 + 2, newValue);
-		WriteMemoryValue<uint8_t>(0x005196CD + 1, newValue);
-	}
 	if (ReadMemoryValue<uint32_t>(0x005DD36A + 1, uintValue))
 	{
 		uint32_t newValue = ini.GetLongValue("Academy", "DISBAND_PENALTY_TIME", 604800);
