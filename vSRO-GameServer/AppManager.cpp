@@ -59,6 +59,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "NPC_RETURN_DEAD_LEVEL_MAX", 20, "; Maximum level for using \"Return to last dead point\" from NPC Guide");
 		ini.SetLongValue("Server", "BEGINNER_MARK_LEVEL_MAX", 19, "; Maximum level to show the beginner mark");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
+		ini.SetBoolValue("Job", "DISABLE_MOB_SPAWN", false, "; Disable Thief/Hunter monster spawn while trading");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL1", 15, "; Guild members capacity at level 1");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL2", 20, "; Guild members capacity at level 2");
@@ -272,7 +273,12 @@ void AppManager::InitPatchValues()
 		printf(" - JOB_LEVEL_MAX (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x0060DE69 + 3, newValue);
 	}
-	
+	if (ini.GetBoolValue("Job", "DISABLE_MOB_SPAWN", false))
+	{
+		printf(" - JOB_DISABLE_MOB_SPAWN\r\n");
+		WriteMemoryValue<uint16_t>(0x0060C4AB, 0xC031); // mov eax,esi -> xor eax,eax
+	}
+
 	// Race
 	if (ReadMemoryValue<uint32_t>(0x0059C5E6 + 1, uintValue))
 	{
