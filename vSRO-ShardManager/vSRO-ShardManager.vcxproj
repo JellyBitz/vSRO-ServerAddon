@@ -153,8 +153,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AppManager.h" />
+    <ClInclude Include="AsmEdition.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Utils\IO\SimpleIni.h" />
+    <ClInclude Include="Utils\Memory\hook.h" />
     <ClInclude Include="Utils\Memory\Process.h" />
   </ItemGroup>
   <ItemGroup>

@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppManager.h" />
+    <ClInclude Include="AsmEdition.h" />
     <ClInclude Include="Silkroad\Text\GString.h" />
     <ClInclude Include="Silkroad\Object\CInstancePC.h" />
     <ClInclude Include="resource.h" />

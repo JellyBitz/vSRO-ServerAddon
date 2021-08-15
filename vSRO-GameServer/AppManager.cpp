@@ -14,6 +14,8 @@
 #include "Utils/Memory/Process.h"
 #include "Utils/Memory/hook.h"
 #pragma warning(disable:4244) // Bitwise operations warnings
+// ASM injection
+#include "AsmEdition.h"
 
 /// Static stuffs
 bool AppManager::m_IsInitialized;
@@ -90,6 +92,7 @@ void AppManager::InitConfigFile()
 		ini.SetBoolValue("Fix", "DISABLE_MSGBOX_SILK_GOLD_PRICE", true, "; Disable messages about \"register silk/gold price.\"");
 		ini.SetBoolValue("Fix", "EXCHANGE_ATTACK_CANCEL", true, "; Remove attack cancel when player exchanges");
 		ini.SetBoolValue("Fix", "EXPLOIT_INVISIBLE_INVINCIBLE", true, "; Cancel exploit sent from client (0x70A7)");
+		ini.SetBoolValue("Fix", "GUILD_POINTS", true, "; Prevents negative values on guild points");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -119,7 +122,7 @@ void AppManager::InitHooks()
 	CSimpleIniA ini;
 	ini.LoadFile("vSRO-GameServer.ini");
 
-	// Uniques
+	// Fixes
 	if (ini.GetBoolValue("Fix","UNIQUE_LOGS",true))
 	{
 		// Create connection string
@@ -132,14 +135,24 @@ void AppManager::InitHooks()
 
 		if (m_dbUniqueLog.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbUniqueLog.sqlCmd.Open(m_dbUniqueLog.sqlConn))
 		{
+			printf(" - FIX_UNIQUE_LOGS\r\n");
 			if (replaceOffset(0x00414DB0, addr_from_this(&AppManager::OnUniqueSpawnMsg)))
 			{
-				std::cout << " - OnUniqueSpawnMsg" << std::endl;
+				std::cout << "   - OnUniqueSpawnMsg" << std::endl;
 			}
 			if (replaceOffset(0x00414BA9, addr_from_this(&AppManager::OnUniqueKilledMsg)))
 			{
-				std::cout << " - OnUniqueKilledMsg" << std::endl;
+				std::cout << "   - OnUniqueKilledMsg" << std::endl;
 			}
+		}
+	}
+	if (ini.GetBoolValue("Fix", "GUILD_POINTS", true))
+	{
+		printf(" - FIX_GUILD_POINTS\r\n");
+		// Redirect code flow to DLL
+		if (placeHook(0x005C4135, addr_from_this(&AsmEdition::OnDonateGuildPoints)))
+		{
+			std::cout << "   - OnDonateGuildPoints" << std::endl;
 		}
 	}
 }
@@ -464,7 +477,7 @@ void AppManager::InitPatchValues()
 		WriteMemoryValue<uint8_t>(0x0066917A + 4, newValue);
 	}
 
-	// Fixes
+	// Fix
 	if (ReadMemoryValue<uint32_t>(0x004744BC + 1, uintValue))
 	{
 		uint32_t newValue = ini.GetLongValue("Fix", "AGENT_SERVER_CAPACITY", 1000);
