@@ -63,6 +63,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "BEGINNER_MARK_LEVEL_MAX", 19, "; Maximum level to show the beginner mark");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetBoolValue("Job", "DISABLE_MOB_SPAWN", false, "; Disable Thief/Hunter monster spawn while trading");
+		ini.SetLongValue("Job", "TEMPLE_LEVEL", 105, "; Minimum level to enter the Temple Area");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL1", 15, "; Guild members capacity at level 1");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL2", 20, "; Guild members capacity at level 2");
@@ -297,6 +298,13 @@ void AppManager::InitPatchValues()
 	{
 		printf(" - JOB_DISABLE_MOB_SPAWN\r\n");
 		WriteMemoryValue<uint16_t>(0x0060C4AB, 0xC031); // mov eax,esi -> xor eax,eax
+	}
+	if (ReadMemoryValue<uint8_t>(0x0051AE71 + 1, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Job", "TEMPLE_LEVEL", 105);
+		printf(" - JOB_TEMPLE_LEVEL (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x0051AE71 + 1, newValue);
+		WriteMemoryValue<uint8_t>(0x0051ABE8 + 1, newValue);
 	}
 
 	// Race
