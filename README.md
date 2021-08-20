@@ -358,6 +358,24 @@ VALUES
 );
 ```
 
+19. Reduces health and/or mana points from player
+```sql
+INSERT INTO [SRO_VT_SHARD].[dbo].[_ExeGameServer]
+(
+	Action_ID,
+	CharName16,
+	Param02, -- HP reduced
+	Param02 -- MP reduced
+)
+VALUES
+(
+	19,
+	'JellyBitz',
+	5000, -- Reducing HP only
+	0
+);
+```
+
 
 ### Action Result Code
 

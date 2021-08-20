@@ -927,6 +927,19 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
 				} break;
+				case 19:
+				{
+					SQLINTEGER cParam02, cParam03, cParam04;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_LONG, &cParam02, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(6, SQL_C_LONG, &cParam03, 0, NULL))
+					{
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->ReduceHPMP(cParam02, cParam03, true);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+				} break;
 				case 3312: // For testing references
 				{
 					CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
