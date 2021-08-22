@@ -58,6 +58,13 @@ This is a compilations of ASM/editions for vSRO (1.188) that you'll need to chan
 00797E21 | 3C 0A                    | cmp al,A                                     | Unlock action
 ```
 
+### SERVER_BEGINNER_MARK_LEVEL_MAX
+
+Fill with NOPs the following instruction to show the beginner mark always.
+```
+009DED3D | 0F84 9E000000            | je sro_client.9DEDE1                                                   |
+```
+
 ### RACE_CH_TOTAL_MASTERIES
 
 0x14A = 330, 0xDC = 220

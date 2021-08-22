@@ -42,9 +42,19 @@ void CGObjPC::UpdateSP(int32_t Offset)
 {
 	CallVirtual<void(__thiscall*)(CGObjPC*, int32_t, int8_t)>(this, 93)(this, Offset, 1);
 }
-void CGObjPC::UpdateHPMP(int32_t Health, int32_t Mana, uint16_t DisplayEffectType)
+void CGObjPC::ReduceHPMP(uint32_t Health, uint32_t Mana, bool ShowEffect)
 {
-	CallVirtual<void(__thiscall*)(CGObjPC*, int32_t, int32_t, uint16_t)>(this, 194)(this, Health, Mana, DisplayEffectType);
+	// Check if player will die by health reduction
+	bool died = Health > m_CInstancePC->Health;
+	if (died)
+	{
+		Health = m_CInstancePC->Health;
+		Mana = m_CInstancePC->Mana;
+	}
+	CallVirtual<void(__thiscall*)(CGObjPC*, uint32_t, uint32_t, uint16_t)>(this, 194)(this, Health, Mana, ShowEffect ? 1024 : 0);
+	// Set dead status
+	if (died)
+		SetLifeState(false);
 }
 void CGObjPC::UpdatePVPCapeType(uint8_t CapeType)
 {

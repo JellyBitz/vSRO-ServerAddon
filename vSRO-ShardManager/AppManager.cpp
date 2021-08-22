@@ -4,13 +4,15 @@
 #include <Windows.h>
 #include <iostream>
 // Utils
-#include "Utils/Memory/Process.h"
 #include "Utils/IO/SimpleIni.h"
+#include "Utils/Memory/Process.h"
+#include "Utils/Memory/hook.h"
 #pragma warning(disable:4244) // Bitwise operations warnings
+// ASM injection
+#include "AsmEdition.h"
 
 /// Static stuffs
 bool AppManager::m_IsInitialized;
-
 void AppManager::Initialize()
 {
 	if (!m_IsInitialized)
@@ -35,6 +37,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Event", "CTF_PARTICIPANS_MIN", 8, "; Minimum participants required to start Capture The Flag");
 		ini.SetLongValue("Event", "BA_PARTICIPANS_MIN", 8, "; Minimum participants required to start Battle Arena");
 		ini.SetBoolValue("Fix", "PARTY_MATCH_1HOUR_DC", true, "; Fix disconnect when party takes more than 1 hour on party match");
+		ini.SetBoolValue("Fix", "GUILD_POINTS", true, "; Prevents negative values on guild points");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -58,7 +61,30 @@ void AppManager::InitDebugConsole()
 }
 void AppManager::InitHooks()
 {
+	std::cout << " * Initializing hooks..." << std::endl;
 
+	// Load file
+	CSimpleIniA ini;
+	ini.LoadFile("vSRO-GameServer.ini");
+
+	// Fix
+	if (ini.GetBoolValue("Fix", "GUILD_POINTS", true))
+	{
+		printf(" - FIX_GUILD_POINTS\r\n");
+		// Redirect code flow to DLL
+		if (placeHook(0x004364EE, addr_from_this(&AsmEdition::OnDonateGuildPoints)))
+		{
+			std::cout << "   - OnDonateGuildPoints" << std::endl;
+		}
+		if (placeHook(0x00438B68, addr_from_this(&AsmEdition::OnDonateGuildPointsErrorCode)))
+		{
+			std::cout << "   - OnDonateGuildPointsErrorCode" << addr_from_this(&AsmEdition::OnDonateGuildPointsErrorCode) << std::endl;
+		}
+		if (placeHook(0x0043A9F6, addr_from_this(&AsmEdition::OnDonateGuildPointsErrorMsg)))
+		{
+			std::cout << "   - OnDonateGuildPointsErrorMsg" << addr_from_this(&AsmEdition::OnDonateGuildPointsErrorMsg) << std::endl;
+		}
+	}
 }
 void AppManager::InitPatchValues()
 {

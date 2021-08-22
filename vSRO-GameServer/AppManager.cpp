@@ -14,6 +14,8 @@
 #include "Utils/Memory/Process.h"
 #include "Utils/Memory/hook.h"
 #pragma warning(disable:4244) // Bitwise operations warnings
+// ASM injection
+#include "AsmEdition.h"
 
 /// Static stuffs
 bool AppManager::m_IsInitialized;
@@ -50,6 +52,7 @@ void AppManager::InitConfigFile()
 		// Memory
 		ini.SetLongValue("Server", "LEVEL_MAX", 110, "; Maximum level that can be reached on server");
 		ini.SetLongValue("Server", "STALL_PRICE_LIMIT", 9999999999, "; Maximum price that can be stalled");
+		ini.SetLongValue("Server", "PARTY_LEVEL_MIN", 5, "; Minimum level to create a party group");
 		ini.SetLongValue("Server", "PARTY_MOB_MEMBERS_REQUIRED", 2, "; Party members required to find monsters party type");
 		ini.SetLongValue("Server", "PARTY_MOB_SPAWN_PROBABILITY", 50, "; % Probability for party mob spawns");
 		ini.SetLongValue("Server", "PK_LEVEL_REQUIRED", 20, "; Level required to kill other player");
@@ -60,6 +63,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "BEGINNER_MARK_LEVEL_MAX", 19, "; Maximum level to show the beginner mark");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetBoolValue("Job", "DISABLE_MOB_SPAWN", false, "; Disable Thief/Hunter monster spawn while trading");
+		ini.SetLongValue("Job", "TEMPLE_LEVEL", 105, "; Minimum level to enter the Temple Area");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL1", 15, "; Guild members capacity at level 1");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL2", 20, "; Guild members capacity at level 2");
@@ -89,6 +93,7 @@ void AppManager::InitConfigFile()
 		ini.SetBoolValue("Fix", "DISABLE_MSGBOX_SILK_GOLD_PRICE", true, "; Disable messages about \"register silk/gold price.\"");
 		ini.SetBoolValue("Fix", "EXCHANGE_ATTACK_CANCEL", true, "; Remove attack cancel when player exchanges");
 		ini.SetBoolValue("Fix", "EXPLOIT_INVISIBLE_INVINCIBLE", true, "; Cancel exploit sent from client (0x70A7)");
+		ini.SetBoolValue("Fix", "GUILD_POINTS", true, "; Prevents negative values on guild points");
 		// App
 		ini.SetBoolValue("App", "DEBUG_CONSOLE", true, "; Attach debug console");
 		// Save it
@@ -118,7 +123,7 @@ void AppManager::InitHooks()
 	CSimpleIniA ini;
 	ini.LoadFile("vSRO-GameServer.ini");
 
-	// Uniques
+	// Fixes
 	if (ini.GetBoolValue("Fix","UNIQUE_LOGS",true))
 	{
 		// Create connection string
@@ -131,14 +136,24 @@ void AppManager::InitHooks()
 
 		if (m_dbUniqueLog.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbUniqueLog.sqlCmd.Open(m_dbUniqueLog.sqlConn))
 		{
+			printf(" - FIX_UNIQUE_LOGS\r\n");
 			if (replaceOffset(0x00414DB0, addr_from_this(&AppManager::OnUniqueSpawnMsg)))
 			{
-				std::cout << " - OnUniqueSpawnMsg" << std::endl;
+				std::cout << "   - OnUniqueSpawnMsg" << std::endl;
 			}
 			if (replaceOffset(0x00414BA9, addr_from_this(&AppManager::OnUniqueKilledMsg)))
 			{
-				std::cout << " - OnUniqueKilledMsg" << std::endl;
+				std::cout << "   - OnUniqueKilledMsg" << std::endl;
 			}
+		}
+	}
+	if (ini.GetBoolValue("Fix", "GUILD_POINTS", true))
+	{
+		printf(" - FIX_GUILD_POINTS\r\n");
+		// Redirect code flow to DLL
+		if (placeHook(0x005C4135, addr_from_this(&AsmEdition::OnDonateGuildPoints)))
+		{
+			std::cout << "   - OnDonateGuildPoints" << std::endl;
 		}
 	}
 }
@@ -216,6 +231,12 @@ void AppManager::InitPatchValues()
 			WriteMemoryValue<uint32_t>(0x004F7746 + 4, newValue);
 		}
 	}
+	if(ReadMemoryValue<uint8_t>(0x00513FEC + 1, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Server", "PARTY_LEVEL_MIN", 5);
+		printf(" - SERVER_PARTY_LEVEL_MIN (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x00513FEC + 1, newValue);
+	}
 	if(ReadMemoryValue<uint8_t>(0x00558F20 + 4, byteValue))
 	{
 		uint8_t newValue = ini.GetLongValue("Server", "PARTY_MOB_MEMBERS_REQUIRED", 2);
@@ -277,6 +298,13 @@ void AppManager::InitPatchValues()
 	{
 		printf(" - JOB_DISABLE_MOB_SPAWN\r\n");
 		WriteMemoryValue<uint16_t>(0x0060C4AB, 0xC031); // mov eax,esi -> xor eax,eax
+	}
+	if (ReadMemoryValue<uint8_t>(0x0051AE71 + 1, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Job", "TEMPLE_LEVEL", 105);
+		printf(" - JOB_TEMPLE_LEVEL (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x0051AE71 + 1, newValue);
+		WriteMemoryValue<uint8_t>(0x0051ABE8 + 1, newValue);
 	}
 
 	// Race
@@ -457,7 +485,7 @@ void AppManager::InitPatchValues()
 		WriteMemoryValue<uint8_t>(0x0066917A + 4, newValue);
 	}
 
-	// Fixes
+	// Fix
 	if (ReadMemoryValue<uint32_t>(0x004744BC + 1, uintValue))
 	{
 		uint32_t newValue = ini.GetLongValue("Fix", "AGENT_SERVER_CAPACITY", 1000);
@@ -895,6 +923,19 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
 						if (player)
 							player->UpdatePVPCapeType(cParam02);
+						else
+							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
+					}
+				} break;
+				case 19: // Reduce HP/MP from player
+				{
+					SQLINTEGER cParam02, cParam03, cParam04;
+					if (m_dbLink.sqlCmd.GetData(5, SQL_C_LONG, &cParam02, 0, NULL)
+						&& m_dbLink.sqlCmd.GetData(6, SQL_C_LONG, &cParam03, 0, NULL))
+					{
+						CGObjPC* player = CGObjManager::GetObjPCByCharName16(cCharName);
+						if (player)
+							player->ReduceHPMP(cParam02, cParam03, true);
 						else
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
