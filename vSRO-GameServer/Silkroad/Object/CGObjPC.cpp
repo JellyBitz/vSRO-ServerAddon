@@ -45,11 +45,11 @@ void CGObjPC::UpdateSP(int32_t Offset)
 void CGObjPC::ReduceHPMP(uint32_t Health, uint32_t Mana, bool ShowEffect)
 {
 	// Check if player will die by health reduction
-	bool died = Health > m_CInstancePC->CurHealth;
+	bool died = Health > m_CInstancePC->Health;
 	if (died)
 	{
-		Health = m_CInstancePC->CurHealth;
-		Mana = m_CInstancePC->CurMana;
+		Health = m_CInstancePC->Health;
+		Mana = m_CInstancePC->Mana;
 	}
 	CallVirtual<void(__thiscall*)(CGObjPC*, uint32_t, uint32_t, uint16_t)>(this, 194)(this, Health, Mana, ShowEffect ? 1024 : 0);
 	// Set dead status

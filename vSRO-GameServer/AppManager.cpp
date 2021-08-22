@@ -927,7 +927,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 							actionResult = FETCH_ACTION_STATE::CHARNAME_NOT_FOUND;
 					}
 				} break;
-				case 19:
+				case 19: // Reduce HP/MP from player
 				{
 					SQLINTEGER cParam02, cParam03, cParam04;
 					if (m_dbLink.sqlCmd.GetData(5, SQL_C_LONG, &cParam02, 0, NULL)

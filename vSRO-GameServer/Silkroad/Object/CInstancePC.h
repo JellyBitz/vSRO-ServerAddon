@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 
+// Contains the basic informacion from player character
 class CInstancePC
 {
 public:
@@ -9,7 +10,8 @@ public:
 	char pad_0014[4]; //0x0014
 	uint32_t RefObjCharPtr; //0x0018
 	char pad_001C[4]; //0x001C
-	uint32_t CharID; //0x0020
+	// ID to identify the player from database
+	uint32_t CharID;
 	char pad_0024[4]; //0x0024
 	uint32_t ModelID; //0x0028
 	char pad_002C[4]; //0x002C
@@ -27,8 +29,10 @@ public:
 	uint32_t RemainSkillPoint; //0x0080
 	uint32_t RemainStatPoint; //0x0084
 	char pad_0088[4]; //0x0088
-	uint32_t CurHealth; //0x008C
-	uint32_t CurMana; //0x0090
+	// Current health points
+	uint32_t Health;
+	// Current mana points
+	uint32_t Mana;
 	uint32_t RegionID; //0x0094
 	float PosX; //0x0098
 	float PosY; //0x009C
