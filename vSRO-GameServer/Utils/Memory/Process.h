@@ -105,3 +105,9 @@ static std::string ReadMemoryString(DWORD DestAddress)
 	// Cannot read it
 	return std::string();
 }
+
+// Gets the full path from current executable process
+static std::string GetExecutablePath() {
+	char filename[MAX_PATH];
+	return std::string(filename, GetModuleFileNameA(NULL, filename, MAX_PATH));
+}

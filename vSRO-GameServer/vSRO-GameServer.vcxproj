@@ -55,6 +55,7 @@
     <ClInclude Include="Utils\IO\SimpleIni.h" />
     <ClInclude Include="Utils\Memory\hook.h" />
     <ClInclude Include="Utils\Memory\Process.h" />
+    <ClInclude Include="Utils\StringHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="vSRO-GameServer.rc" />

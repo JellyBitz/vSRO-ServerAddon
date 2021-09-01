@@ -13,6 +13,7 @@
 #include "Utils/IO/SimpleIni.h"
 #include "Utils/Memory/Process.h"
 #include "Utils/Memory/hook.h"
+#include "Utils/StringHelpers.h"
 #pragma warning(disable:4244) // Bitwise operations warnings
 // ASM injection
 #include "AsmEdition.h"
@@ -48,6 +49,7 @@ void AppManager::InitConfigFile()
 		ini.SetValue("Sql", "USER", "sa", "; Username credential");
 		ini.SetValue("Sql", "PASS", "1234", "; Password credential");
 		ini.SetValue("Sql", "DB_SHARD", "SRO_VT_SHARD", "; Name used for the specified silkroad database");
+		ini.SetValue("Sql", "DB_SHARD_FETCH_TABLE", "_ExeGameServer", "; Table name used to fetch actions, it will generate");
 		ini.SetValue("Sql", "DB_LOG", "SRO_VT_SHARDLOG", "; Name used for the specified silkroad database");
 		// Memory
 		ini.SetLongValue("Server", "LEVEL_MAX", 110, "; Maximum level that can be reached on server");
@@ -530,15 +532,7 @@ void AppManager::InitPatchValues()
 }
 void AppManager::InitDatabaseFetch()
 {
-	// Check if this DLL is running into another gameserver process
-	CreateMutexA(0, FALSE, "JellyBitz/vSRO-GameServer");
-	if (GetLastError() == ERROR_ALREADY_EXISTS)
-	{
-		// Avoid create fetch connection
-		return;
-	}
-
-	std::cout << " * Initializing database fetch to execute actions..." << std::endl;
+	std::cout << " * Initializing database connection to execute actions..." << std::endl;
 
 	// Load file
 	CSimpleIniA ini;
@@ -555,23 +549,38 @@ void AppManager::InitDatabaseFetch()
 	if (m_dbLink.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbLink.sqlCmd.Open(m_dbLink.sqlConn)
 		&& m_dbLinkHelper.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbLinkHelper.sqlCmd.Open(m_dbLinkHelper.sqlConn))
 	{
-		auto hThread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)AppManager::DatabaseFetchThread, 0, 0, 0);
-		//// Set thread as background process (below normal)
-		//SetThreadPriority(hThread, -1);
+		CreateThread(0, 0, (LPTHREAD_START_ROUTINE)AppManager::DatabaseFetchThread, 0, 0, 0);
 	}
 }
 DWORD WINAPI AppManager::DatabaseFetchThread()
 {
-	std::cout << " - Waiting 1min before start fetching..." << std::endl;
+	// Try to create a mutex to synchronize processes with the same path
+	std::string path = GetExecutablePath();
+	StringReplaceAll(path, "\\", "/"); // Replace string not supported by mutex name
+	HANDLE fetchSyncMutex = CreateMutexA(0, TRUE, path.c_str());
+	// Make sure mutex has been created
+	if (fetchSyncMutex == NULL)
+	{
+		printf(" Fetch synchronization creation aborted! [Error %d]\n", GetLastError());
+		return 0;
+	}
+
+	// Load file
+	CSimpleIniA ini;
+	ini.LoadFile("vSRO-GameServer.ini");
+	const char* fetchTableName = ini.GetValue("Sql", "DB_SHARD_FETCH_TABLE", "_ExeGameServer");
+	
+	// Show a message about table to be fetch
+	std::cout << " - Waiting 1min before start fetching on \"" << fetchTableName << "\"..." << std::endl;
 	Sleep(60000);
 	std::cout << " - Fetching started!" << std::endl;
 	m_IsRunningDatabaseFetch = true;
 
 	// Try to create table used to fetch
 	std::wstringstream qCreateTable;
-	qCreateTable << "IF OBJECT_ID(N'dbo._ExeGameServer', N'U') IS NULL";
+	qCreateTable << "IF OBJECT_ID(N'dbo." << fetchTableName << "', N'U') IS NULL";
 	qCreateTable << " BEGIN";
-	qCreateTable << " CREATE TABLE dbo._ExeGameServer";
+	qCreateTable << " CREATE TABLE dbo." << fetchTableName;
 	qCreateTable << " (ID INT IDENTITY(1,1) PRIMARY KEY,";
 	qCreateTable << " Action_ID INT NOT NULL,";
 	qCreateTable << " Action_Result SMALLINT NOT NULL DEFAULT 0,";
@@ -601,10 +610,13 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 	// Start fetching actions without result
 	std::wstringstream qSelectActions;
 	qSelectActions << "SELECT ID, Action_ID, CharName16, Param01, Param02, Param03, Param04, Param05, Param06, Param07, Param08";
-	qSelectActions << " FROM dbo._ExeGameServer";
+	qSelectActions << " FROM dbo." << fetchTableName;
 	qSelectActions << " WHERE Action_Result = " << FETCH_ACTION_STATE::UNKNOWN;
 	while (m_IsRunningDatabaseFetch)
 	{
+		// Synchronize processes by taking the lock
+		WaitForSingleObject(fetchSyncMutex, INFINITE);
+
 		// Try to execute query
 		if (!m_dbLink.sqlCmd.ExecuteQuery((SQLWCHAR*)qSelectActions.str().c_str()))
 			break;
@@ -964,7 +976,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 
 			// Update action result from table by row id
 			std::wstringstream qUpdateResult;
-			qUpdateResult << "UPDATE dbo._ExeGameServer";
+			qUpdateResult << "UPDATE dbo." << fetchTableName;
 			qUpdateResult << " SET Action_Result = " << actionResult;
 			qUpdateResult << " WHERE ID = " << cID;
 			m_dbLinkHelper.sqlCmd.ExecuteQuery((SQLWCHAR*)qUpdateResult.str().c_str());
@@ -972,6 +984,9 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 		}
 		m_dbLink.sqlCmd.Clear();
 		
+		// Release the lock
+		ReleaseMutex(fetchSyncMutex);
+
 		// Making like 10 querys per second
 		Sleep(100);
 	}
