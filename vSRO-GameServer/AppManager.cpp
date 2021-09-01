@@ -49,7 +49,7 @@ void AppManager::InitConfigFile()
 		ini.SetValue("Sql", "USER", "sa", "; Username credential");
 		ini.SetValue("Sql", "PASS", "1234", "; Password credential");
 		ini.SetValue("Sql", "DB_SHARD", "SRO_VT_SHARD", "; Name used for the specified silkroad database");
-		ini.SetValue("Sql", "DB_SHARD_FETCH_TABLE", "_ExeGameServer", "; Table name used to fetch actions, it will generate");
+		ini.SetValue("Sql", "DB_SHARD_FETCH_TABLE", "_ExeGameServer", "; Table name used to execute actions");
 		ini.SetValue("Sql", "DB_LOG", "SRO_VT_SHARDLOG", "; Name used for the specified silkroad database");
 		// Memory
 		ini.SetLongValue("Server", "LEVEL_MAX", 110, "; Maximum level that can be reached on server");
