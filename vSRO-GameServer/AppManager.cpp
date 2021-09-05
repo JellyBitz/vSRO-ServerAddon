@@ -554,33 +554,26 @@ void AppManager::InitDatabaseFetch()
 }
 DWORD WINAPI AppManager::DatabaseFetchThread()
 {
-	// Try to create a mutex to synchronize processes with the same path
-	std::string path = GetExecutablePath();
-	StringReplaceAll(path, "\\", "/"); // Replace string not supported by mutex name
-	HANDLE fetchSyncMutex = CreateMutexA(0, TRUE, path.c_str());
-	// Make sure mutex has been created
-	if (fetchSyncMutex == NULL)
-	{
-		printf(" Fetch synchronization creation aborted! [Error %d]\n", GetLastError());
-		return 0;
-	}
-
 	// Load file
 	CSimpleIniA ini;
 	ini.LoadFile("vSRO-GameServer.ini");
 	const char* fetchTableName = ini.GetValue("Sql", "DB_SHARD_FETCH_TABLE", "_ExeGameServer");
+
+	// Generate unique id to fetch from multiples instances
+	int pId = GetProcessInstanceId();
+	const char* fetchTableSuffix = (pId == 0 ? "" : std::to_string(pId + 2).c_str());
 	
 	// Show a message about table to be fetch
-	std::cout << " - Waiting 1min before start fetching on \"" << fetchTableName << "\"..." << std::endl;
+	std::cout << " - Waiting 1min before start fetching on \"" << fetchTableName << fetchTableSuffix << "\"..." << std::endl;
 	Sleep(60000);
 	std::cout << " - Fetching started!" << std::endl;
 	m_IsRunningDatabaseFetch = true;
 
 	// Try to create table used to fetch
 	std::wstringstream qCreateTable;
-	qCreateTable << "IF OBJECT_ID(N'dbo." << fetchTableName << "', N'U') IS NULL";
+	qCreateTable << "IF OBJECT_ID(N'dbo." << fetchTableName << fetchTableSuffix << "', N'U') IS NULL";
 	qCreateTable << " BEGIN";
-	qCreateTable << " CREATE TABLE dbo." << fetchTableName;
+	qCreateTable << " CREATE TABLE dbo." << fetchTableName << fetchTableSuffix;
 	qCreateTable << " (ID INT IDENTITY(1,1) PRIMARY KEY,";
 	qCreateTable << " Action_ID INT NOT NULL,";
 	qCreateTable << " Action_Result SMALLINT NOT NULL DEFAULT 0,";
@@ -610,13 +603,10 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 	// Start fetching actions without result
 	std::wstringstream qSelectActions;
 	qSelectActions << "SELECT ID, Action_ID, CharName16, Param01, Param02, Param03, Param04, Param05, Param06, Param07, Param08";
-	qSelectActions << " FROM dbo." << fetchTableName;
+	qSelectActions << " FROM dbo." << fetchTableName << fetchTableSuffix;
 	qSelectActions << " WHERE Action_Result = " << FETCH_ACTION_STATE::UNKNOWN;
 	while (m_IsRunningDatabaseFetch)
 	{
-		// Synchronize processes by taking the lock
-		WaitForSingleObject(fetchSyncMutex, INFINITE);
-
 		// Try to execute query
 		if (!m_dbLink.sqlCmd.ExecuteQuery((SQLWCHAR*)qSelectActions.str().c_str()))
 			break;
@@ -976,16 +966,13 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 
 			// Update action result from table by row id
 			std::wstringstream qUpdateResult;
-			qUpdateResult << "UPDATE dbo." << fetchTableName;
+			qUpdateResult << "UPDATE dbo." << fetchTableName << fetchTableSuffix;
 			qUpdateResult << " SET Action_Result = " << actionResult;
 			qUpdateResult << " WHERE ID = " << cID;
 			m_dbLinkHelper.sqlCmd.ExecuteQuery((SQLWCHAR*)qUpdateResult.str().c_str());
 			m_dbLinkHelper.sqlCmd.Clear();
 		}
 		m_dbLink.sqlCmd.Clear();
-		
-		// Release the lock
-		ReleaseMutex(fetchSyncMutex);
 
 		// Making like 10 querys per second
 		Sleep(100);
@@ -1000,4 +987,28 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 	std::cout << " - Fetching stopped!" << std::endl;
 
 	return 0;
+}
+
+int AppManager::GetProcessInstanceId()
+{
+    // Check unique process instances using the executable path
+    std::string path = GetExecutablePath();
+    StringReplaceAll(path, "\\", "/"); // Replace symbols used on mutex
+
+    // Find available id
+    int id = 0;
+    while (true)
+    {
+        // Set an unique name as ID
+        std::stringstream ss;
+        ss << "Global\\" << path.c_str() << "|" << id;
+
+        // Try to create mutex
+        CreateMutexA(NULL, TRUE, ss.str().c_str());
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
+            break;
+        // Try to find another id
+        id++;
+    }
+    return id;
 }

@@ -6,7 +6,7 @@ Customize Silkroad Online server files (v1.188) behavior through DLL injection.
 - Easy to inject using *Stud_PE*
 - Patch values from memory directly
 - Define all options from their respective config file
-- Execute actions from Gameserver (first gameserver running on the same machine will execute these actions)
+- Execute actions from Gameserver (to support N modules, N tables will be created)
 
 ## How to use?
 
