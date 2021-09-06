@@ -561,7 +561,8 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 
 	// Generate unique id to fetch from multiples instances
 	int pId = GetProcessInstanceId();
-	const char* fetchTableSuffix = (pId == 0 ? "" : std::to_string(pId + 2).c_str());
+	std::string suffix = (pId == 0 ? "" : std::to_string(pId + 1));
+	const char* fetchTableSuffix = suffix.c_str();
 	
 	// Show a message about table to be fetch
 	std::cout << " - Waiting 1min before start fetching on \"" << fetchTableName << fetchTableSuffix << "\"..." << std::endl;
