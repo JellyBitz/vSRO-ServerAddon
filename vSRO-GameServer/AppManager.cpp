@@ -994,7 +994,7 @@ int AppManager::GetProcessInstanceId()
 {
     // Check unique process instances using the executable path
     std::string path = GetExecutablePath();
-    StringReplaceAll(path, "\\", "/"); // Replace symbols used on mutex
+    StringReplaceAll(path, "\\", "/"); // Replace special symbols used on mutex
 
     // Find available id
     int id = 0;
