@@ -13,6 +13,7 @@
 #include "Utils/IO/SimpleIni.h"
 #include "Utils/Memory/Process.h"
 #include "Utils/Memory/hook.h"
+#include "Utils/StringHelpers.h"
 #pragma warning(disable:4244) // Bitwise operations warnings
 // ASM injection
 #include "AsmEdition.h"
@@ -48,6 +49,7 @@ void AppManager::InitConfigFile()
 		ini.SetValue("Sql", "USER", "sa", "; Username credential");
 		ini.SetValue("Sql", "PASS", "1234", "; Password credential");
 		ini.SetValue("Sql", "DB_SHARD", "SRO_VT_SHARD", "; Name used for the specified silkroad database");
+		ini.SetValue("Sql", "DB_SHARD_FETCH_TABLE", "_ExeGameServer", "; Table name used to execute actions");
 		ini.SetValue("Sql", "DB_LOG", "SRO_VT_SHARDLOG", "; Name used for the specified silkroad database");
 		// Memory
 		ini.SetLongValue("Server", "LEVEL_MAX", 110, "; Maximum level that can be reached on server");
@@ -61,6 +63,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "RESURRECT_SAME_POINT_LEVEL_MAX", 10, "; Maximum level for resurrect at the same map position");
 		ini.SetLongValue("Server", "NPC_RETURN_DEAD_LEVEL_MAX", 20, "; Maximum level for using \"Return to last dead point\" from NPC Guide");
 		ini.SetLongValue("Server", "BEGINNER_MARK_LEVEL_MAX", 19, "; Maximum level to show the beginner mark");
+		ini.SetLongValue("Server", "DROP_ITEM_MAGIC_PROBABILITY", 30, "; % Probability to drop items with blue options");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetBoolValue("Job", "DISABLE_MOB_SPAWN", false, "; Disable Thief/Hunter monster spawn while trading");
 		ini.SetLongValue("Job", "TEMPLE_LEVEL", 105, "; Minimum level to enter the Temple Area");
@@ -285,6 +288,12 @@ void AppManager::InitPatchValues()
 		printf(" - SERVER_BEGINNER_MARK_LEVEL_MAX (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x004E4F0F + 4, newValue);
 		WriteMemoryValue<uint8_t>(0x00518B99 + 3, newValue);
+	}
+	if (ReadMemoryValue<uint8_t>(0x00727784 + 2, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Server", "DROP_ITEM_MAGIC_PROBABILITY", 30);
+		printf(" - SERVER_DROP_ITEM_MAGIC_PROBABILITY (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x00727784 + 2, newValue);
 	}
 
 	// Job
@@ -530,15 +539,7 @@ void AppManager::InitPatchValues()
 }
 void AppManager::InitDatabaseFetch()
 {
-	// Check if this DLL is running into another gameserver process
-	CreateMutexA(0, FALSE, "JellyBitz/vSRO-GameServer");
-	if (GetLastError() == ERROR_ALREADY_EXISTS)
-	{
-		// Avoid create fetch connection
-		return;
-	}
-
-	std::cout << " * Initializing database fetch to execute actions..." << std::endl;
+	std::cout << " * Initializing database connection to execute actions..." << std::endl;
 
 	// Load file
 	CSimpleIniA ini;
@@ -555,23 +556,32 @@ void AppManager::InitDatabaseFetch()
 	if (m_dbLink.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbLink.sqlCmd.Open(m_dbLink.sqlConn)
 		&& m_dbLinkHelper.sqlConn.Open((SQLWCHAR*)connString.str().c_str()) && m_dbLinkHelper.sqlCmd.Open(m_dbLinkHelper.sqlConn))
 	{
-		auto hThread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)AppManager::DatabaseFetchThread, 0, 0, 0);
-		//// Set thread as background process (below normal)
-		//SetThreadPriority(hThread, -1);
+		CreateThread(0, 0, (LPTHREAD_START_ROUTINE)AppManager::DatabaseFetchThread, 0, 0, 0);
 	}
 }
 DWORD WINAPI AppManager::DatabaseFetchThread()
 {
-	std::cout << " - Waiting 1min before start fetching..." << std::endl;
+	// Load file
+	CSimpleIniA ini;
+	ini.LoadFile("vSRO-GameServer.ini");
+	const char* fetchTableName = ini.GetValue("Sql", "DB_SHARD_FETCH_TABLE", "_ExeGameServer");
+
+	// Generate unique id to fetch from multiples instances
+	int pId = GetProcessInstanceId();
+	std::string suffix = (pId == 0 ? "" : std::to_string(pId + 1));
+	const char* fetchTableSuffix = suffix.c_str();
+	
+	// Show a message about table to be fetch
+	std::cout << " - Waiting 1min before start fetching on \"" << fetchTableName << fetchTableSuffix << "\"..." << std::endl;
 	Sleep(60000);
 	std::cout << " - Fetching started!" << std::endl;
 	m_IsRunningDatabaseFetch = true;
 
 	// Try to create table used to fetch
 	std::wstringstream qCreateTable;
-	qCreateTable << "IF OBJECT_ID(N'dbo._ExeGameServer', N'U') IS NULL";
+	qCreateTable << "IF OBJECT_ID(N'dbo." << fetchTableName << fetchTableSuffix << "', N'U') IS NULL";
 	qCreateTable << " BEGIN";
-	qCreateTable << " CREATE TABLE dbo._ExeGameServer";
+	qCreateTable << " CREATE TABLE dbo." << fetchTableName << fetchTableSuffix;
 	qCreateTable << " (ID INT IDENTITY(1,1) PRIMARY KEY,";
 	qCreateTable << " Action_ID INT NOT NULL,";
 	qCreateTable << " Action_Result SMALLINT NOT NULL DEFAULT 0,";
@@ -601,7 +611,7 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 	// Start fetching actions without result
 	std::wstringstream qSelectActions;
 	qSelectActions << "SELECT ID, Action_ID, CharName16, Param01, Param02, Param03, Param04, Param05, Param06, Param07, Param08";
-	qSelectActions << " FROM dbo._ExeGameServer";
+	qSelectActions << " FROM dbo." << fetchTableName << fetchTableSuffix;
 	qSelectActions << " WHERE Action_Result = " << FETCH_ACTION_STATE::UNKNOWN;
 	while (m_IsRunningDatabaseFetch)
 	{
@@ -964,14 +974,14 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 
 			// Update action result from table by row id
 			std::wstringstream qUpdateResult;
-			qUpdateResult << "UPDATE dbo._ExeGameServer";
+			qUpdateResult << "UPDATE dbo." << fetchTableName << fetchTableSuffix;
 			qUpdateResult << " SET Action_Result = " << actionResult;
 			qUpdateResult << " WHERE ID = " << cID;
 			m_dbLinkHelper.sqlCmd.ExecuteQuery((SQLWCHAR*)qUpdateResult.str().c_str());
 			m_dbLinkHelper.sqlCmd.Clear();
 		}
 		m_dbLink.sqlCmd.Clear();
-		
+
 		// Making like 10 querys per second
 		Sleep(100);
 	}
@@ -985,4 +995,28 @@ DWORD WINAPI AppManager::DatabaseFetchThread()
 	std::cout << " - Fetching stopped!" << std::endl;
 
 	return 0;
+}
+
+int AppManager::GetProcessInstanceId()
+{
+    // Check unique process instances using the executable path
+    std::string path = GetExecutablePath();
+    StringReplaceAll(path, "\\", "/"); // Replace special symbols used on mutex
+
+    // Find available id
+    int id = 0;
+    while (true)
+    {
+        // Set an unique name as ID
+        std::stringstream ss;
+        ss << "Global\\" << path.c_str() << "|" << id;
+
+        // Try to create mutex
+        CreateMutexA(NULL, TRUE, ss.str().c_str());
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
+            break;
+        // Try to find another id
+        id++;
+    }
+    return id;
 }

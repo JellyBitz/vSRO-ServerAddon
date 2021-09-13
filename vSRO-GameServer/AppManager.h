@@ -56,4 +56,6 @@ private: // Private Helpers
 	static void InitDatabaseFetch();
 	// Fetch database and execute the required actions
 	static DWORD WINAPI DatabaseFetchThread();
+	// Creates an unique identifier for this process starting from zero
+	static int GetProcessInstanceId();
 };

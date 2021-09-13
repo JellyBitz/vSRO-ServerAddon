@@ -29,7 +29,7 @@ public: /// Public Methods
 	void UpdateExperience(int64_t ExpOffset);
 	// Add skill experience
 	void AddSPExperience(uint32_t SPExpOffset);
-	// Reduces health and/or mana points. If health reduced exceeds the current amount, the player will die
+	// Reduces health and/or mana points. If health reduced equals or exceeds the current amount, the player will die
 	void ReduceHPMP(uint32_t Health, uint32_t Mana, bool ShowEffect);
 	// Updates the cape state from PVP
 	void UpdatePVPCapeType(uint8_t CapeType);

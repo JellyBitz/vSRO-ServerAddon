@@ -45,7 +45,7 @@ void CGObjPC::UpdateSP(int32_t Offset)
 void CGObjPC::ReduceHPMP(uint32_t Health, uint32_t Mana, bool ShowEffect)
 {
 	// Check if player will die by health reduction
-	bool died = Health > m_CInstancePC->Health;
+	bool died = Health >= m_CInstancePC->Health;
 	if (died)
 	{
 		Health = m_CInstancePC->Health;

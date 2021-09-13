@@ -6,7 +6,7 @@ namespace AsmEdition
 {
 	// Jump back to the code flow from donating guild points
 	static DWORD jmpAddr_DonateGP = 0x005C413A;
-	// Handler to catch guild point increasing hook and edit directly with asm
+	// Hook on guild point increasing (0x005C4135)
 	static _declspec(naked) void OnDonateGuildPoints()
 	{
 		// Rebuild asm
