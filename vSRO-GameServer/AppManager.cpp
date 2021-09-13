@@ -63,6 +63,7 @@ void AppManager::InitConfigFile()
 		ini.SetLongValue("Server", "RESURRECT_SAME_POINT_LEVEL_MAX", 10, "; Maximum level for resurrect at the same map position");
 		ini.SetLongValue("Server", "NPC_RETURN_DEAD_LEVEL_MAX", 20, "; Maximum level for using \"Return to last dead point\" from NPC Guide");
 		ini.SetLongValue("Server", "BEGINNER_MARK_LEVEL_MAX", 19, "; Maximum level to show the beginner mark");
+		ini.SetLongValue("Server", "DROP_ITEM_MAGIC_PROBABILITY", 30, "; % Probability to drop items with blue options");
 		ini.SetLongValue("Job", "LEVEL_MAX", 7, "; Maximum level that can be reached on job suit");
 		ini.SetBoolValue("Job", "DISABLE_MOB_SPAWN", false, "; Disable Thief/Hunter monster spawn while trading");
 		ini.SetLongValue("Job", "TEMPLE_LEVEL", 105, "; Minimum level to enter the Temple Area");
@@ -287,6 +288,12 @@ void AppManager::InitPatchValues()
 		printf(" - SERVER_BEGINNER_MARK_LEVEL_MAX (%d) -> (%d)\r\n", byteValue, newValue);
 		WriteMemoryValue<uint8_t>(0x004E4F0F + 4, newValue);
 		WriteMemoryValue<uint8_t>(0x00518B99 + 3, newValue);
+	}
+	if (ReadMemoryValue<uint8_t>(0x00727784 + 2, byteValue))
+	{
+		uint8_t newValue = ini.GetLongValue("Server", "DROP_ITEM_MAGIC_PROBABILITY", 30);
+		printf(" - SERVER_DROP_ITEM_MAGIC_PROBABILITY (%d) -> (%d)\r\n", byteValue, newValue);
+		WriteMemoryValue<uint8_t>(0x00727784 + 2, newValue);
 	}
 
 	// Job
