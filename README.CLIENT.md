@@ -92,6 +92,14 @@ Fill with NOPs the following instruction to show the beginner mark always.
 00D8C444  23 00 00 00 | Level 4 = 0x00000023 = 35
 00D8C448  32 00 00 00 | Level 5 = 0x00000032 = 50
 ```
+Similar values used with old guild UI probably
+```hex
+00D92388  0F 00 00 00 | Level 1 = 0x0000000F = 15
+00D9238C  14 00 00 00 | Level 2 = 0x00000014 = 20
+00D92390  19 00 00 00 | Level 3 = 0x00000019 = 25
+00D92394  23 00 00 00 | Level 4 = 0x00000023 = 35
+00D92398  32 00 00 00 | Level 5 = 0x00000032 = 50
+```
 
 ### GUILD_UNION_CHAT_PARTICIPANTS
 
