@@ -78,11 +78,11 @@ void AppManager::InitHooks()
 		}
 		if (placeHook(0x00438B68, addr_from_this(&AsmEdition::OnDonateGuildPointsErrorCode)))
 		{
-			std::cout << "   - OnDonateGuildPointsErrorCode" << addr_from_this(&AsmEdition::OnDonateGuildPointsErrorCode) << std::endl;
+			std::cout << "   - OnDonateGuildPointsErrorCode" << std::endl;
 		}
 		if (placeHook(0x0043A9F6, addr_from_this(&AsmEdition::OnDonateGuildPointsErrorMsg)))
 		{
-			std::cout << "   - OnDonateGuildPointsErrorMsg" << addr_from_this(&AsmEdition::OnDonateGuildPointsErrorMsg) << std::endl;
+			std::cout << "   - OnDonateGuildPointsErrorMsg" << std::endl;
 		}
 	}
 }
