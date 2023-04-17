@@ -73,7 +73,11 @@ Fill with NOPs the following instruction to show the beginner mark always.
 006A51BC | BF 4A010000              | mov edi,14A                       | Chinese
 
 006AA4C3 | BE 4A010000              | mov esi,14A                       | Chinese
+```
 
+### RACE_EU_TOTAL_MASTERIES
+
+```
 006A5197 | 3D F0000000              | cmp eax,DC                        | European
 
 006A51A2 | BF F0000000              | mov edi,DC                        | European

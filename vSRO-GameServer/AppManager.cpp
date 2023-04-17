@@ -68,6 +68,7 @@ void AppManager::InitConfigFile()
 		ini.SetBoolValue("Job", "DISABLE_MOB_SPAWN", false, "; Disable Thief/Hunter monster spawn while trading");
 		ini.SetLongValue("Job", "TEMPLE_LEVEL", 105, "; Minimum level to enter the Temple Area");
 		ini.SetLongValue("Race", "CH_TOTAL_MASTERIES", 330, "; Masteries amount Chinese will obtain");
+		ini.SetLongValue("Race", "EU_TOTAL_MASTERIES", 220, "; Masteries amount European will obtain");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL1", 15, "; Guild members capacity at level 1");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL2", 20, "; Guild members capacity at level 2");
 		ini.SetLongValue("Guild", "MEMBERS_LIMIT_LEVEL3", 25, "; Guild members capacity at level 3");
@@ -199,6 +200,7 @@ void AppManager::InitPatchValues()
 	// buffers
 	uint8_t byteValue;
 	uint32_t uintValue;
+	double_t doubleValue;
 
 	// Server
 	if (ReadMemoryValue<uint8_t>(0x004E52C7 + 2, byteValue))
@@ -322,6 +324,12 @@ void AppManager::InitPatchValues()
 		uint32_t newValue = ini.GetLongValue("Race", "CH_TOTAL_MASTERIES", 330);
 		printf(" - RACE_CH_TOTAL_MASTERIES (%u) -> (%u)\r\n", uintValue, newValue);
 		WriteMemoryValue<uint32_t>(0x0059C5E6 + 1, newValue);
+	}
+	if (ReadMemoryValue<double_t>(0x00746130, doubleValue))
+	{
+		uint32_t newValue = ini.GetLongValue("Race", "EU_TOTAL_MASTERIES", 220);
+		printf(" - RACE_EU_TOTAL_MASTERIES (%u) -> (%u)\r\n", (uint32_t)doubleValue, newValue);
+		WriteMemoryValue<double_t>(0x00746130, (double_t)newValue);
 	}
 
 	// Guild
