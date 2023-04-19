@@ -325,11 +325,11 @@ void AppManager::InitPatchValues()
 		printf(" - RACE_CH_TOTAL_MASTERIES (%u) -> (%u)\r\n", uintValue, newValue);
 		WriteMemoryValue<uint32_t>(0x0059C5E6 + 1, newValue);
 	}
-	if (ReadMemoryValue<double_t>(0x00746130, doubleValue))
+	if (ReadMemoryValue<double_t>(0x00B46130, doubleValue))
 	{
 		uint32_t newValue = ini.GetLongValue("Race", "EU_TOTAL_MASTERIES", 220);
 		printf(" - RACE_EU_TOTAL_MASTERIES (%u) -> (%u)\r\n", (uint32_t)doubleValue, newValue);
-		WriteMemoryValue<double_t>(0x00746130, (double_t)newValue);
+		WriteMemoryValue<double_t>(0x00B46130, (double_t)newValue);
 	}
 
 	// Guild
