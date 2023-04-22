@@ -25,15 +25,16 @@ void AppManager::InitPatchValues()
 	uint8_t levelMax = 110;
 	WriteMemoryValue<uint8_t>(0x008A99A2 + 2, levelMax); // Level up limit
 	WriteMemoryValue<uint8_t>(0x0069C7C8 + 1, levelMax); // Mastery limit
-	WriteMemoryValue<uint8_t>(0x0073940E + 1, levelMax); // Party Match
-	WriteMemoryValue<uint8_t>(0x00739453 + 1, levelMax); // Party Match
+	//WriteMemoryValue<uint8_t>(0x0073940E + 1, levelMax); // Party Match (Auto match)
+	//WriteMemoryValue<uint8_t>(0x00739453 + 1, levelMax); // Party Match (Auto match)
 	WriteMemoryValue<uint8_t>(0x0073AFAE + 1, levelMax); // Party Match
 	WriteMemoryValue<uint8_t>(0x0073B013 + 1, levelMax); // Party Match
 	WriteMemoryValue<uint8_t>(0x0073B030 + 1, levelMax); // Party Match
 	WriteMemoryValue<uint8_t>(0x0073FA4C + 1, levelMax); // Party Match
 	WriteMemoryValue<uint8_t>(0x0073FAAF + 1, levelMax); // Party Match
 	WriteMemoryValue<uint8_t>(0x0073FACC + 1, levelMax); // Party Match
-
+	WriteMemoryValue<uint8_t>(0x009448B1 + 6, levelMax); // Skill limit
+	
 	// SERVER_STALL_PRICE_LIMIT
 	uint64_t priceLimit = 9999999999;
 	WriteMemoryValue<uint8_t>(0x005DF9DE + 1, priceLimit >> 32);
@@ -56,22 +57,22 @@ void AppManager::InitPatchValues()
 	{
 		for(int i = 0; i < 6; i++)
 		{
-			WriteMemoryValue<uint8_t>(0x009DED3D, 0x90); // nop
+			WriteMemoryValue<uint8_t>(0x009DED3D + i, 0x90); // nop
 		}
 	}
 
 	// RACE_CH_TOTAL_MASTERIES
-	uint8_t masteries_CH = 330;
-	WriteMemoryValue<uint8_t>(0x006A51BC + 1, masteries_CH);
-	WriteMemoryValue<uint8_t>(0x006AA4C3 + 1, masteries_CH);
+	uint32_t masteries_CH = 330;
+	WriteMemoryValue<uint32_t>(0x006A51BC + 1, masteries_CH);
+	WriteMemoryValue<uint32_t>(0x006AA4C3 + 1, masteries_CH);
 	
 	// RACE_EU_TOTAL_MASTERIES
-	uint8_t masteries_EU = 330;
-	WriteMemoryValue<uint8_t>(0x006A5197 + 1, masteries_EU);
-	WriteMemoryValue<uint8_t>(0x006A51A2 + 1, masteries_EU);
-	WriteMemoryValue<uint8_t>(0x006AA498 + 1, masteries_EU);
-	WriteMemoryValue<uint8_t>(0x006AA4A3 + 1, masteries_EU);
-
+	uint32_t masteries_EU = 220;
+	WriteMemoryValue<uint32_t>(0x006A5197 + 1, masteries_EU);
+	WriteMemoryValue<uint32_t>(0x006A51A2 + 1, masteries_EU);
+	WriteMemoryValue<uint32_t>(0x006AA498 + 1, masteries_EU);
+	WriteMemoryValue<uint32_t>(0x006AA4A3 + 1, masteries_EU);
+	
 	// GUILD_MEMBERS_LIMIT
 	WriteMemoryValue<uint32_t>(0x00D8C438, 15); // level 1
 	WriteMemoryValue<uint32_t>(0x00D8C43C, 20); // level 2
