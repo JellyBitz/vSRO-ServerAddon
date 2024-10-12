@@ -53,13 +53,9 @@ void AppManager::InitPatchValues()
 
 	// SERVER_BEGINNER_MARK_LEVEL_MAX
 	bool displayAlways = false;
-	if(displayAlways)
-	{
-		for(int i = 0; i < 6; i++)
-		{
+	if (displayAlways)
+		for (int i = 0; i < 6; i++)
 			WriteMemoryValue<uint8_t>(0x009DED3D + i, 0x90); // nop
-		}
-	}
 
 	// RACE_CH_TOTAL_MASTERIES
 	uint32_t masteries_CH = 330;
@@ -74,16 +70,16 @@ void AppManager::InitPatchValues()
 	WriteMemoryValue<uint32_t>(0x006AA4A3 + 1, masteries_EU);
 	
 	// GUILD_MEMBERS_LIMIT
-	WriteMemoryValue<uint32_t>(0x00D8C438, 15); // level 1
-	WriteMemoryValue<uint32_t>(0x00D8C43C, 20); // level 2
-	WriteMemoryValue<uint32_t>(0x00D8C440, 25); // level 3
-	WriteMemoryValue<uint32_t>(0x00D8C444, 35); // level 4
-	WriteMemoryValue<uint32_t>(0x00D8C448, 50); // level 5
-	WriteMemoryValue<uint32_t>(0x00D92388, 15); // level 1
-	WriteMemoryValue<uint32_t>(0x00D9238C, 20); // level 2
-	WriteMemoryValue<uint32_t>(0x00D92390, 25); // level 3
-	WriteMemoryValue<uint32_t>(0x00D92394, 35); // level 4
-	WriteMemoryValue<uint32_t>(0x00D92398, 50); // level 5
+	WriteMemoryValue<uint32_t>(0x00D8C438, 15); // Lv.1
+	WriteMemoryValue<uint32_t>(0x00D92388, 15);
+	WriteMemoryValue<uint32_t>(0x00D8C43C, 20); // Lv.2
+	WriteMemoryValue<uint32_t>(0x00D9238C, 20);
+	WriteMemoryValue<uint32_t>(0x00D8C440, 25); // Lv.3
+	WriteMemoryValue<uint32_t>(0x00D92390, 25);
+	WriteMemoryValue<uint32_t>(0x00D8C444, 35); // Lv.4
+	WriteMemoryValue<uint32_t>(0x00D92394, 35);
+	WriteMemoryValue<uint32_t>(0x00D8C448, 50); // Lv.5
+	WriteMemoryValue<uint32_t>(0x00D92398, 50);
 
 	// GUILD_UNION_CHAT_PARTICIPANTS
 	uint8_t unionChatParticipants = 12;
@@ -94,12 +90,62 @@ void AppManager::InitPatchValues()
 	WriteMemoryValue<uint8_t>(0x0085DE67 + 6, charactersPerAccount);
 
 	/// EXTRAS
-	// Cooldown for Universal Pills (ms)
+
+	// Cooldown from Universal Pills (ms)
 	WriteMemoryValue<uint32_t>(0x0087ABD3 + 1, 1000);
-	// Cooldown for Purification Pills (ms)
+	// Cooldown from Purification Pills (ms)
 	WriteMemoryValue<uint32_t>(0x0087AC02 + 1, 20000);
+	
 	// Disable zoom limit check
 	WriteMemoryValue<uint8_t>(0x0077B4F3 + 2, 0);
+
 	// Range to auto select monsters (range)
 	WriteMemoryValue<float>(0x00D990A8, 750.0);
+
+	// Background sight range
+	WriteMemoryValue<float>(0x00DE4C5C, 1500.0f); // 0
+	WriteMemoryValue<float>(0x00DE34C0, 2500.0f); // 1
+	WriteMemoryValue<float>(0x00DE4C58, 3500.0f); // 2
+	WriteMemoryValue<float>(0x00DE4C54, 4500.0f); // 3
+	WriteMemoryValue<float>(0x00DE4C50, 5500.0f); // 4
+
+	// Nude characters
+	bool useNudity = false;
+	if (useNudity)
+		for (int i = 0; i < 2; i++)
+			WriteMemoryValue<uint8_t>(0x00A5CE5B + i, 0x90); // nop
+
+	// Loading screen image resolution
+	WriteMemoryValue<uint32_t>(0x0086D405 + 4, 400); // 400
+	WriteMemoryValue<uint32_t>(0x0086D40D + 4, 148); // 148
+
+	// Multiclient
+	bool multiclient = false;
+	if(multiclient)
+	{
+		bool isLauncherRequired = true;
+		if(!isLauncherRequired)
+		{
+			// Remove "Silkroad.exe" running requirement
+			WriteMemoryValue<uint8_t>(0x008329EB, 0xEB); // jne -> jmp
+			// Remove mutexes required from launcher; "Silkroad Online Launcher" and "Ready"
+			WriteMemoryValue<uint8_t>(0x00830C67, 0xEB); // je -> jmp
+		}
+		// Remove mutex check for "Silkroad Client" already executed
+		WriteMemoryValue<uint8_t>(0x0083297F, 0xEB); // jne -> jmp
+	}
+	
+	// Berserker Title color
+	WriteMemoryValue<uint32_t>(0x009C28ED + 1, 0xFFFFE65B);
+	// [GM] Text color
+	WriteMemoryValue<uint32_t>(0x009CFDD2 + 1, 0xFFFFD87A);
+	
+	// Item SEAL color
+	WriteMemoryValue<uint32_t>(0x0066FC74 + 1, 0xFFFFD953);
+	// Item SET color
+	WriteMemoryValue<uint32_t>(0x0066FCC8 + 1, 0xFF6CE675); // Color below Seal of...
+	WriteMemoryValue<uint32_t>(0x0067A097 + 1, 0xFF6CE675); // Color above set options
+	WriteMemoryValue<uint32_t>(0x0067A2F2 + 1, 0xFF6CE675); // Color below set options
+	WriteMemoryValue<uint32_t>(0x00675C4F + 3 + 4, 0xFF6CE675); // Color below set options
+
 }
