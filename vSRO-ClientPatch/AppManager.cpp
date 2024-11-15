@@ -119,19 +119,33 @@ void AppManager::InitPatchValues()
 	WriteMemoryValue<uint32_t>(0x0086D405 + 4, 400); // 400
 	WriteMemoryValue<uint32_t>(0x0086D40D + 4, 148); // 148
 
+	// XTrap
+	bool useXTrap = false;
+	if(!useXTrap)
+	{
+		// Skip "Silkroad" mutex probably
+		WriteMemoryValue<uint8_t>(0x00844AEF, 0xEB); // je? jne? -> jmp
+		// Remove call to "Silkload.dat"
+		for (int i = 0; i < 5; i++)
+			WriteMemoryValue<uint8_t>(0x008328C3 + i, 0x90); // nop
+		// Remove a lot stuffs I don't even know
+		for (int i = 0x00B7AEF0; i <= 0x00B7C3EF; i++)
+			WriteMemoryValue<uint8_t>(i, 0x90); // nop
+	}
+
 	// Multiclient
-	bool multiclient = false;
-	if(multiclient)
+	bool useMulticlient = false;
+	if(useMulticlient)
 	{
 		bool isLauncherRequired = true;
 		if(!isLauncherRequired)
 		{
-			// Remove "Silkroad.exe" running requirement
+			// Skip "Silkroad.exe" running requirement
 			WriteMemoryValue<uint8_t>(0x008329EB, 0xEB); // jne -> jmp
-			// Remove mutexes required from launcher; "Silkroad Online Launcher" and "Ready"
+			// Skip mutexes required from launcher; "Silkroad Online Launcher" and "Ready"
 			WriteMemoryValue<uint8_t>(0x00830C67, 0xEB); // je -> jmp
 		}
-		// Remove mutex check for "Silkroad Client" already executed
+		// Skip mutex check for "Silkroad Client" already executed
 		WriteMemoryValue<uint8_t>(0x0083297F, 0xEB); // jne -> jmp
 	}
 	
